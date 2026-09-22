@@ -71,6 +71,8 @@ All calculations are performed client-side and update as values change.
 
 The dashboard is already suitable for GitHub Pages because it is a standalone HTML file.
 
+Live dashboard: [https://samurai-ka.github.io/sharepoint-archive-cost-report/](https://samurai-ka.github.io/sharepoint-archive-cost-report/)
+
 1. Push the repository to GitHub.
 2. Open **Settings > Pages** for the repository.
 3. Select **Deploy from a branch**.

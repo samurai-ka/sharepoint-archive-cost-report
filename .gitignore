@@ -1,0 +1,9 @@
+# Local editor settings
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Local logs
+*.log

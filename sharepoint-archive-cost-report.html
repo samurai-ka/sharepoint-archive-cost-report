@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SharePoint Archive Cost Report</title>
+    <style>
+      :root {
+        --bg: #f3f2f1;
+        --surface: #ffffff;
+        --surface-alt: #f8f8f8;
+        --surface-subtle: #f5f5f5;
+        --border: #e1dfdd;
+        --text: #201f1e;
+        --text-secondary: #605e5c;
+        --primary: #0078d4;
+        --sharepoint: #0078d4;
+        --red10: #d13438;
+        --yellowgreen10: #8cbd18;
+        --green20: #0b6a0b;
+        --primary-dark: #005a9e;
+        --primary-soft: #eaf5ff;
+        --success: #107c10;
+        --success-soft: #e8f5e9;
+        --purple: #5c2d91;
+        --purple-soft: #f3ebff;
+        --warning: #d83b01;
+        --warning-soft: #fff4ce;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(0, 0, 0, 0.08);
+        --radius: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", SegoeUI, Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .page-shell {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 32px 20px 28px;
+      }
+
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .title-wrap h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 2.5vw, 2.5rem);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .title-wrap p {
+        margin: 8px 0 0;
+        color: var(--text-secondary);
+        font-size: 0.98rem;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary-dark);
+        font-weight: 600;
+        font-size: 0.85rem;
+        border: 1px solid rgba(0, 120, 212, 0.1);
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--primary);
+        display: inline-block;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+        gap: 24px;
+      }
+
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        padding: 18px 20px 0;
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .panel-content {
+        padding: 18px 20px 20px;
+      }
+
+      .control-panel {
+        align-self: start;
+      }
+
+      .field-group {
+        margin-bottom: 18px;
+      }
+
+      .field-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        gap: 12px;
+      }
+
+      .field-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+
+      .field-unit {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
+      .input-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 110px;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .price-field-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .edit-price-button {
+        border: 1px solid var(--border);
+        background: var(--surface-alt);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 14px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+
+      .edit-price-button:hover {
+        background: var(--primary-soft);
+        border-color: rgba(0, 120, 212, 0.25);
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--primary);
+        cursor: pointer;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface-alt);
+        padding: 10px 12px;
+        font-size: 1rem;
+        color: var(--text);
+      }
+
+      input[readonly] {
+        background: #f3f2f1;
+        color: var(--text-secondary);
+        cursor: default;
+      }
+
+      input[type="number"]:focus,
+      input[type="range"]:focus {
+        outline: 2px solid rgba(0, 120, 212, 0.2);
+        outline-offset: 2px;
+      }
+
+      .validation {
+        min-height: 24px;
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--warning-soft);
+        color: #7a2100;
+        border: 1px solid rgba(216, 59, 1, 0.18);
+        font-size: 0.85rem;
+        display: none;
+      }
+
+      .validation.show {
+        display: block;
+      }
+
+      .main-area {
+        display: grid;
+        gap: 24px;
+      }
+
+      .chart-panel .panel-content {
+        padding-top: 12px;
+      }
+
+      .chart-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .stacked-bar {
+        position: relative;
+        width: min(100%, 500px);
+        height: 360px;
+        margin: 6px auto 0;
+        background: linear-gradient(180deg, #f5f5f5 0%, #f0f0f0 100%);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+      }
+
+      .stack-segment {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 50px;
+        transition: height 0.25s ease;
+      }
+
+      .stack-segment.included {
+        background: var(--sharepoint);
+      }
+
+      .stack-segment.payg {
+        background: var(--red10);
+      }
+
+      .stack-segment.archive {
+        background: var(--yellowgreen10);
+      }
+
+      .segment-label {
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        padding: 8px 10px;
+        border-radius: 999px;
+        backdrop-filter: blur(2px);
+      }
+
+      .legend-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(160px, 1fr));
+        gap: 14px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+      }
+
+      .legend-color {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        flex: 0 0 auto;
+      }
+
+      .legend-details {
+        min-width: 0;
+      }
+
+      .legend-title {
+        display: block;
+        font-weight: 600;
+        font-size: 0.92rem;
+      }
+
+      .legend-meta {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-top: 2px;
+      }
+
+      .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .summary-table th,
+      .summary-table td {
+        text-align: left;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .summary-table tr:last-child th,
+      .summary-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .summary-table th {
+        width: 60%;
+        color: var(--text-secondary);
+        font-weight: 600;
+      }
+
+      .summary-table td {
+        font-weight: 600;
+        width: 40%;
+        white-space: nowrap;
+      }
+
+      #savingsPercentSummary {
+        color: var(--green20);
+      }
+
+      .formula-panel .panel-content,
+      .summary-panel .panel-content {
+        padding-top: 14px;
+      }
+
+      .formula-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .formula-item {
+        padding: 12px 14px;
+        background: var(--surface-alt);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+      }
+
+      .formula-item strong {
+        color: var(--text-secondary);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .formula-item span {
+        font-size: 0.98rem;
+        line-height: 1.5;
+      }
+
+      footer {
+        margin-top: 20px;
+        padding: 18px 16px 8px;
+        color: var(--text-secondary);
+        font-size: 0.84rem;
+      }
+
+      .disclaimer {
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+      }
+
+      .disclaimer strong {
+        font-weight: 600;
+      }
+
+      @media (max-width: 980px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page-shell {
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+
+        .page-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .input-row {
+          grid-template-columns: 1fr;
+        }
+
+        .legend-grid,
+        .summary-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stacked-bar {
+          height: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="page-header" aria-label="Dashboard heading">
+        <div class="title-wrap">
+          <h1>SharePoint Archive Cost Report</h1>
+          <p>Storage allocation and monthly cost overview</p>
+        </div>
+        <div class="status-chip" aria-label="Dashboard status">
+          <span class="status-dot"></span>
+          Live estimate
+        </div>
+      </header>
+
+      <main class="dashboard-grid">
+        <aside class="panel control-panel" aria-labelledby="inputs-title">
+          <div class="panel-header">
+            <h2 id="inputs-title">Controls</h2>
+          </div>
+          <div class="panel-content">
+            <div class="field-group">
+              <div class="field-row">
+                <label class="field-label" for="includedStorageRange">Included Storage</label>
+                <span class="field-unit">TB</span>
+              </div>
+              <div class="input-row">
+                <input id="includedStorageRange" type="range" min="0" max="1000" step="1" value="5" />
+                <input id="includedStorageInput" type="number" min="0" max="1000" step="1" value="5" aria-label="Included Storage in TB" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-row">
+                <label class="field-label" for="totalStorageRange">Total Storage</label>
+                <span class="field-unit">TB</span>
+              </div>
+              <div class="input-row">
+                <input id="totalStorageRange" type="range" min="0" max="2000" step="1" value="15" />
+                <input id="totalStorageInput" type="number" min="0" max="2000" step="1" value="15" aria-label="Total Storage in TB" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-row">
+                <label class="field-label" for="archiveStorageRange">Archive Storage</label>
+                <span class="field-unit">TB</span>
+              </div>
+              <div class="input-row">
+                <input id="archiveStorageRange" type="range" min="0" max="2000" step="1" value="3" />
+                <input id="archiveStorageInput" type="number" min="0" max="2000" step="1" value="3" aria-label="Archive Storage in TB" />
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-row">
+                <label class="field-label" for="paygPriceInput">PAYG Price</label>
+                <span class="field-unit">€/GB</span>
+              </div>
+              <div class="price-field-shell">
+                <input id="paygPriceInput" type="number" min="0" max="5" step="0.01" value="0.20" aria-label="PAYG Price in EUR per GB" readonly />
+                <button type="button" class="edit-price-button" data-target="paygPrice">Edit</button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <div class="field-row">
+                <label class="field-label" for="archivePriceInput">Archive Price</label>
+                <span class="field-unit">€/GB</span>
+              </div>
+              <div class="price-field-shell">
+                <input id="archivePriceInput" type="number" min="0" max="5" step="0.01" value="0.05" aria-label="Archive Price in EUR per GB" readonly />
+                <button type="button" class="edit-price-button" data-target="archivePrice">Edit</button>
+              </div>
+            </div>
+
+            <div id="validationMessage" class="validation" role="alert" aria-live="polite"></div>
+          </div>
+        </aside>
+
+        <section class="main-area" aria-label="Dashboard content">
+          <div class="panel chart-panel" aria-labelledby="chart-title">
+            <div class="panel-header">
+              <h2 id="chart-title">Storage Allocation</h2>
+            </div>
+            <div class="panel-content">
+              <div class="chart-wrap">
+                <div class="stacked-bar" aria-label="Stacked storage allocation bar">
+                  <div id="archiveSegment" class="stack-segment archive">
+                    <span class="segment-label">Archive</span>
+                  </div>
+                  <div id="paygSegment" class="stack-segment payg">
+                    <span class="segment-label">PAYG</span>
+                  </div>
+                  <div id="includedSegment" class="stack-segment included">
+                    <span class="segment-label">Included</span>
+                  </div>
+                </div>
+
+                <div class="legend-grid" aria-label="Legend">
+                  <div class="legend-item">
+                    <span class="legend-color" style="background: var(--sharepoint);"></span>
+                    <div class="legend-details">
+                      <span class="legend-title">Included Storage</span>
+                      <span id="includedLegend" class="legend-meta">5.0 TB</span>
+                    </div>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-color" style="background: var(--red10);"></span>
+                    <div class="legend-details">
+                      <span class="legend-title">PAYG Storage</span>
+                      <span id="paygLegend" class="legend-meta">7.0 TB • €1,550.00</span>
+                    </div>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-color" style="background: var(--yellowgreen10);"></span>
+                    <div class="legend-details">
+                      <span class="legend-title">Archive Storage</span>
+                      <span id="archiveLegend" class="legend-meta">3.0 TB • €150.00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel summary-panel" aria-labelledby="summary-title">
+          <div class="panel-header">
+            <h2 id="summary-title">Monthly Cost Summary</h2>
+          </div>
+          <div class="panel-content">
+            <table class="summary-table" aria-label="Monthly cost summary table">
+              <tbody>
+                <tr>
+                  <th scope="row">Active PAYG Storage Cost</th>
+                  <td id="paygCostSummary">€1,550.00</td>
+                </tr>
+                <tr>
+                  <th scope="row">Archive Storage Cost</th>
+                  <td id="archiveCostSummary">€150.00</td>
+                </tr>
+                <tr>
+                  <th scope="row">Total Cost</th>
+                  <td id="totalCostSummary">€1,700.00</td>
+                </tr>
+                <tr>
+                  <th scope="row">Cost Without Archive</th>
+                  <td id="costWithoutArchiveSummary">€1,700.00</td>
+                </tr>
+                <tr>
+                  <th scope="row">Savings</th>
+                  <td id="savingsSummary">€0.00</td>
+                </tr>
+                <tr>
+                  <th scope="row">Savings Percentage</th>
+                  <td id="savingsPercentSummary">0.00%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel formula-panel" aria-labelledby="formula-title">
+          <div class="panel-header">
+            <h2 id="formula-title">Live Formula</h2>
+          </div>
+          <div class="panel-content">
+            <div class="formula-list">
+              <div class="formula-item">
+                <strong>Allocation</strong>
+                <span id="allocationFormula">15 TB total − 5 TB included − 3 TB archive = 7 TB PAYG</span>
+              </div>
+              <div class="formula-item">
+                <strong>Cost</strong>
+                <span id="costFormula">7 TB × €0.20/GB + 3 TB × €0.05/GB = €1,700.00</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> Taxes, rounding differences, contractual terms and other cost components are not included. All information is provided without warranty.
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      "use strict";
+
+      const DEFAULTS = {
+        includedStorage: 5,
+        totalStorage: 15,
+        archiveStorage: 3,
+        paygPrice: 0.2,
+        archivePrice: 0.05
+      };
+
+      const state = {
+        includedStorage: DEFAULTS.includedStorage,
+        totalStorage: DEFAULTS.totalStorage,
+        archiveStorage: DEFAULTS.archiveStorage,
+        paygPrice: DEFAULTS.paygPrice,
+        archivePrice: DEFAULTS.archivePrice
+      };
+
+      const rangeMap = {
+        includedStorage: document.getElementById("includedStorageRange"),
+        totalStorage: document.getElementById("totalStorageRange"),
+        archiveStorage: document.getElementById("archiveStorageRange")
+      };
+
+      const inputMap = {
+        includedStorage: document.getElementById("includedStorageInput"),
+        totalStorage: document.getElementById("totalStorageInput"),
+        archiveStorage: document.getElementById("archiveStorageInput"),
+        paygPrice: document.getElementById("paygPriceInput"),
+        archivePrice: document.getElementById("archivePriceInput")
+      };
+
+      const priceButtons = {
+        paygPrice: document.querySelector('[data-target="paygPrice"]'),
+        archivePrice: document.querySelector('[data-target="archivePrice"]')
+      };
+
+      const validationMessage = document.getElementById("validationMessage");
+
+      function formatNumber(value, digits = 0) {
+        return Number(value).toLocaleString(undefined, {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
+      }
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "EUR",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(value);
+      }
+
+      function setValidation(message) {
+        if (!message) {
+          validationMessage.textContent = "";
+          validationMessage.classList.remove("show");
+          return;
+        }
+
+        validationMessage.textContent = message;
+        validationMessage.classList.add("show");
+      }
+
+      function sanitizeNumber(value, fallback, min = 0, max = 10000) {
+        const parsed = Number(value);
+
+        if (!Number.isFinite(parsed)) {
+          return fallback;
+        }
+
+        if (parsed < min) {
+          return min;
+        }
+
+        if (parsed > max) {
+          return max;
+        }
+
+        return parsed;
+      }
+
+      const includedStorageLimit = 1000;
+      const totalStorageLimit = 2000;
+
+      const priceEditBackup = {
+        paygPrice: 0.2,
+        archivePrice: 0.05
+      };
+
+      function getMaxArchiveStorage() {
+        const maxArchive = Math.max(0, state.totalStorage - state.includedStorage);
+        return Number.isFinite(maxArchive) ? maxArchive : 0;
+      }
+
+      function syncInputs(key, value) {
+        const nextValue = Number(value);
+        if (rangeMap[key]) {
+          rangeMap[key].value = nextValue;
+        }
+        if (inputMap[key]) {
+          if (key === "paygPrice" || key === "archivePrice") {
+            inputMap[key].value = Number(nextValue).toFixed(2);
+          } else {
+            inputMap[key].value = nextValue;
+          }
+        }
+
+        if (key === "archiveStorage" && rangeMap.archiveStorage && inputMap.archiveStorage) {
+          const maxArchive = getMaxArchiveStorage();
+          rangeMap.archiveStorage.max = String(maxArchive);
+          inputMap.archiveStorage.max = String(maxArchive);
+          const boundedValue = Math.min(Math.max(0, nextValue), maxArchive);
+          if (nextValue !== boundedValue) {
+            rangeMap.archiveStorage.value = boundedValue;
+            inputMap.archiveStorage.value = boundedValue;
+          }
+        }
+      }
+
+      function setPriceEditing(key, isEditing, shouldRestore = false) {
+        const input = inputMap[key];
+        const button = priceButtons[key];
+
+        if (!input || !button) {
+          return;
+        }
+
+        if (isEditing) {
+          priceEditBackup[key] = Number(state[key] ?? 0);
+          input.value = Number(state[key] ?? 0).toFixed(2);
+          input.readOnly = false;
+          button.textContent = "Done";
+          input.focus();
+          input.select();
+          return;
+        }
+
+        if (shouldRestore) {
+          input.value = Number(priceEditBackup[key] ?? state[key] ?? 0).toFixed(2);
+          state[key] = Number(priceEditBackup[key] ?? state[key] ?? 0);
+        }
+
+        input.readOnly = true;
+        button.textContent = "Edit";
+      }
+
+      function normalizeState() {
+        let message = "";
+        const included = sanitizeNumber(state.includedStorage, DEFAULTS.includedStorage, 0, includedStorageLimit);
+        const total = sanitizeNumber(state.totalStorage, DEFAULTS.totalStorage, 0, totalStorageLimit);
+        const maxArchive = Math.max(0, total - included);
+        const archive = sanitizeNumber(state.archiveStorage, DEFAULTS.archiveStorage, 0, Math.max(0, maxArchive));
+        const paygPrice = sanitizeNumber(state.paygPrice, DEFAULTS.paygPrice, 0, 5);
+        const archivePrice = sanitizeNumber(state.archivePrice, DEFAULTS.archivePrice, 0, 5);
+
+        state.includedStorage = included;
+        state.totalStorage = total;
+        state.archiveStorage = archive;
+        state.paygPrice = paygPrice;
+        state.archivePrice = archivePrice;
+
+        if (state.includedStorage < 0) {
+          state.includedStorage = 0;
+          message = "Included storage was negative and has been reset to 0 TB.";
+        }
+
+        if (state.totalStorage < 0) {
+          state.totalStorage = 0;
+          message = "Total storage was negative and has been reset to 0 TB.";
+        }
+
+        if (state.archiveStorage < 0) {
+          state.archiveStorage = 0;
+          message = "Archive storage was negative and has been reset to 0 TB.";
+        }
+
+        if (state.paygPrice < 0) {
+          state.paygPrice = 0;
+          message = "PAYG price was negative and has been reset to €0.00/GB.";
+        }
+
+        if (state.archivePrice < 0) {
+          state.archivePrice = 0;
+          message = "Archive price was negative and has been reset to €0.00/GB.";
+        }
+
+        if (state.totalStorage < state.includedStorage) {
+          state.totalStorage = state.includedStorage;
+          message = "Total storage was below Included Storage, so it was increased to match the Included Storage amount.";
+        }
+
+        const additionalStorage = Math.max(0, state.totalStorage - state.includedStorage);
+        if (state.archiveStorage > additionalStorage) {
+          state.archiveStorage = additionalStorage;
+          message = "Archive storage exceeded the available additional storage and was reduced automatically.";
+        }
+
+        if (state.archiveStorage < 0) {
+          state.archiveStorage = 0;
+          message = "Archive storage was negative and has been reset to 0 TB.";
+        }
+
+        if (rangeMap.archiveStorage && inputMap.archiveStorage) {
+          rangeMap.archiveStorage.max = String(additionalStorage);
+          inputMap.archiveStorage.max = String(additionalStorage);
+        }
+
+        if (state.includedStorage === 0 && state.totalStorage === 0) {
+          message = "All storage values are zero. This may indicate no active storage usage.";
+        }
+
+        if (state.totalStorage > totalStorageLimit || state.includedStorage > includedStorageLimit || state.archiveStorage > 10000) {
+          message = "A storage value exceeds the configured limit and has been capped to the maximum supported range.";
+        }
+
+        if (state.paygPrice === 0 && state.archivePrice === 0) {
+          message = "Both pricing values are zero. Costs will display as €0.00.";
+        }
+
+        syncInputs("includedStorage", state.includedStorage);
+        syncInputs("totalStorage", state.totalStorage);
+        syncInputs("archiveStorage", state.archiveStorage);
+        syncInputs("paygPrice", state.paygPrice);
+        syncInputs("archivePrice", state.archivePrice);
+
+        setValidation(message);
+      }
+
+      function calculateMetrics() {
+        normalizeState();
+
+        const additionalStorage = Math.max(0, state.totalStorage - state.includedStorage);
+        const paygStorage = Math.max(0, additionalStorage - state.archiveStorage);
+
+        const paygCost = paygStorage * 1000 * state.paygPrice;
+        const archiveCost = state.archiveStorage * 1000 * state.archivePrice;
+        const totalCost = paygCost + archiveCost;
+        const costWithoutArchive = additionalStorage * 1000 * state.paygPrice;
+        const savings = costWithoutArchive - totalCost;
+        const savingsPercentage = costWithoutArchive > 0 ? (savings / costWithoutArchive) * 100 : 0;
+
+        return {
+          additionalStorage,
+          paygStorage,
+          paygCost,
+          archiveCost,
+          totalCost,
+          costWithoutArchive,
+          savings,
+          savingsPercentage
+        };
+      }
+
+      function applyBarHeights(totalAmount, included, payg, archive) {
+        const includedSegment = document.getElementById("includedSegment");
+        const paygSegment = document.getElementById("paygSegment");
+        const archiveSegment = document.getElementById("archiveSegment");
+
+        const safeTotal = totalAmount > 0 ? totalAmount : 1;
+
+        const heights = {
+          archive: (archive / safeTotal) * 100,
+          payg: (payg / safeTotal) * 100,
+          included: (included / safeTotal) * 100
+        };
+
+        archiveSegment.style.height = `${heights.archive}%`;
+        paygSegment.style.height = `${heights.payg}%`;
+        includedSegment.style.height = `${heights.included}%`;
+
+        archiveSegment.style.display = archive > 0 ? "flex" : "none";
+        paygSegment.style.display = payg > 0 ? "flex" : "none";
+        includedSegment.style.display = included > 0 ? "flex" : "none";
+      }
+
+      function render() {
+        const metrics = calculateMetrics();
+        const totalStorage = state.totalStorage;
+
+        document.getElementById("includedLegend").textContent = `${formatNumber(state.includedStorage, 0)} TB`;
+        document.getElementById("paygLegend").textContent = `${formatNumber(metrics.paygStorage, 0)} TB • ${formatCurrency(metrics.paygCost)}`;
+        document.getElementById("archiveLegend").textContent = `${formatNumber(state.archiveStorage, 0)} TB • ${formatCurrency(metrics.archiveCost)}`;
+
+        document.getElementById("paygCostSummary").textContent = formatCurrency(metrics.paygCost);
+        document.getElementById("archiveCostSummary").textContent = formatCurrency(metrics.archiveCost);
+        document.getElementById("totalCostSummary").textContent = formatCurrency(metrics.totalCost);
+        document.getElementById("costWithoutArchiveSummary").textContent = formatCurrency(metrics.costWithoutArchive);
+        document.getElementById("savingsSummary").textContent = formatCurrency(metrics.savings);
+        document.getElementById("savingsPercentSummary").textContent = `${formatNumber(metrics.savingsPercentage, 2)}%`;
+
+        document.getElementById("allocationFormula").textContent = `${formatNumber(totalStorage, 0)} TB total − ${formatNumber(state.includedStorage, 0)} TB included − ${formatNumber(state.archiveStorage, 0)} TB archive = ${formatNumber(metrics.paygStorage, 0)} TB PAYG`;
+        document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatCurrency(state.paygPrice)} / GB + ${formatNumber(state.archiveStorage, 0)} TB × ${formatCurrency(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;
+
+        applyBarHeights(totalStorage, state.includedStorage, metrics.paygStorage, state.archiveStorage);
+
+        const includedLabel = document.getElementById("includedSegment").querySelector(".segment-label");
+        const paygLabel = document.getElementById("paygSegment").querySelector(".segment-label");
+        const archiveLabel = document.getElementById("archiveSegment").querySelector(".segment-label");
+
+        includedLabel.textContent = `${formatNumber(state.includedStorage, 0)} TB`;
+        paygLabel.textContent = `${formatNumber(metrics.paygStorage, 0)} TB`;
+        archiveLabel.textContent = `${formatNumber(state.archiveStorage, 0)} TB`;
+      }
+
+      function bindInput(key) {
+        const inputElement = inputMap[key];
+        const rangeElement = rangeMap[key];
+
+        if (!inputElement) {
+          return;
+        }
+
+        const updateFromInput = (newValue) => {
+          const parsed = Number(newValue);
+          if (!Number.isFinite(parsed)) {
+            return;
+          }
+
+          if (key === "archiveStorage") {
+            const maxArchive = Number(rangeElement?.max || getMaxArchiveStorage() || 0);
+            const clampedValue = Math.min(Math.max(0, parsed), maxArchive);
+            state[key] = clampedValue;
+            if (rangeElement) {
+              rangeElement.value = String(clampedValue);
+            }
+            if (inputElement) {
+              inputElement.value = String(clampedValue);
+            }
+          } else {
+            state[key] = parsed;
+          }
+
+          render();
+        };
+
+        inputElement.addEventListener("input", (event) => {
+          const value = event.target.value;
+          if (rangeElement) {
+            rangeElement.value = value;
+          }
+          updateFromInput(value);
+        });
+
+        if (rangeElement) {
+          rangeElement.addEventListener("input", (event) => {
+            const value = event.target.value;
+            inputElement.value = value;
+            updateFromInput(value);
+          });
+        }
+      }
+
+      function bindPriceToggle(key) {
+        const inputElement = inputMap[key];
+        const button = priceButtons[key];
+
+        if (!inputElement || !button) {
+          return;
+        }
+
+        button.addEventListener("click", () => {
+          const isEditing = !inputElement.readOnly;
+
+          if (isEditing) {
+            const parsedValue = Number(inputElement.value || 0);
+            state[key] = Number.isFinite(parsedValue) ? parsedValue : Number(priceEditBackup[key] ?? 0);
+            setPriceEditing(key, false, false);
+            render();
+            return;
+          }
+
+          setPriceEditing(key, true, false);
+        });
+
+        inputElement.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            const parsedValue = Number(inputElement.value || 0);
+            if (Number.isFinite(parsedValue)) {
+              state[key] = parsedValue;
+            }
+            setPriceEditing(key, false, false);
+            render();
+          }
+
+          if (event.key === "Escape") {
+            setPriceEditing(key, false, true);
+            render();
+          }
+        });
+
+        inputElement.addEventListener("blur", () => {
+          if (!inputElement.readOnly) {
+            const parsedValue = Number(inputElement.value || 0);
+            if (Number.isFinite(parsedValue)) {
+              state[key] = parsedValue;
+            }
+            setPriceEditing(key, false, false);
+            render();
+          }
+        });
+      }
+
+      bindInput("includedStorage");
+      bindInput("totalStorage");
+      bindInput("archiveStorage");
+      bindInput("paygPrice");
+      bindInput("archivePrice");
+      bindPriceToggle("paygPrice");
+      bindPriceToggle("archivePrice");
+
+      setPriceEditing("paygPrice", false);
+      setPriceEditing("archivePrice", false);
+      render();
+    </script>
+  </body>
+</html>

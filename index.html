@@ -723,7 +723,7 @@
       };
 
       function getMaxArchiveStorage() {
-        const maxArchive = Math.max(0, state.totalStorage - state.includedStorage);
+        const maxArchive = Math.max(0, state.totalStorage);
         return Number.isFinite(maxArchive) ? maxArchive : 0;
       }
 
@@ -783,8 +783,7 @@
         let message = "";
         const included = sanitizeNumber(state.includedStorage, DEFAULTS.includedStorage, 0, includedStorageLimit);
         const total = sanitizeNumber(state.totalStorage, DEFAULTS.totalStorage, 0, totalStorageLimit);
-        const maxArchive = Math.max(0, total - included);
-        const archive = sanitizeNumber(state.archiveStorage, DEFAULTS.archiveStorage, 0, Math.max(0, maxArchive));
+        const archive = sanitizeNumber(state.archiveStorage, DEFAULTS.archiveStorage, 0, Math.max(0, total));
         const paygPrice = sanitizeNumber(state.paygPrice, DEFAULTS.paygPrice, 0, 5);
         const archivePrice = sanitizeNumber(state.archivePrice, DEFAULTS.archivePrice, 0, 5);
 
@@ -825,19 +824,14 @@
         }
 
         const additionalStorage = Math.max(0, state.totalStorage - state.includedStorage);
-        if (state.archiveStorage > additionalStorage) {
-          state.archiveStorage = additionalStorage;
-          message = "Archive storage exceeded the available additional storage and was reduced automatically.";
-        }
-
         if (state.archiveStorage < 0) {
           state.archiveStorage = 0;
           message = "Archive storage was negative and has been reset to 0 TB.";
         }
 
         if (rangeMap.archiveStorage && inputMap.archiveStorage) {
-          rangeMap.archiveStorage.max = String(additionalStorage);
-          inputMap.archiveStorage.max = String(additionalStorage);
+          rangeMap.archiveStorage.max = String(state.totalStorage);
+          inputMap.archiveStorage.max = String(state.totalStorage);
         }
 
         if (state.includedStorage === 0 && state.totalStorage === 0) {
@@ -866,9 +860,10 @@
 
         const additionalStorage = Math.max(0, state.totalStorage - state.includedStorage);
         const paygStorage = Math.max(0, additionalStorage - state.archiveStorage);
+        const billableArchiveStorage = Math.min(state.archiveStorage, additionalStorage);
 
         const paygCost = paygStorage * 1000 * state.paygPrice;
-        const archiveCost = state.archiveStorage * 1000 * state.archivePrice;
+        const archiveCost = billableArchiveStorage * 1000 * state.archivePrice;
         const totalCost = paygCost + archiveCost;
         const costWithoutArchive = additionalStorage * 1000 * state.paygPrice;
         const savings = costWithoutArchive - totalCost;
@@ -877,6 +872,7 @@
         return {
           additionalStorage,
           paygStorage,
+          billableArchiveStorage,
           paygCost,
           archiveCost,
           totalCost,
@@ -914,7 +910,10 @@
 
         document.getElementById("includedLegend").textContent = `${formatNumber(state.includedStorage, 0)} TB`;
         document.getElementById("paygLegend").textContent = `${formatNumber(metrics.paygStorage, 0)} TB • ${formatCurrency(metrics.paygCost)}`;
-        document.getElementById("archiveLegend").textContent = `${formatNumber(state.archiveStorage, 0)} TB • ${formatCurrency(metrics.archiveCost)}`;
+        const archiveLegendValue = metrics.billableArchiveStorage < state.archiveStorage
+          ? `${formatNumber(state.archiveStorage, 0)} TB (${formatNumber(metrics.billableArchiveStorage, 0)} TB billable)`
+          : `${formatNumber(state.archiveStorage, 0)} TB`;
+        document.getElementById("archiveLegend").textContent = `${archiveLegendValue} • ${formatCurrency(metrics.archiveCost)}`;
 
         document.getElementById("paygCostSummary").textContent = formatCurrency(metrics.paygCost);
         document.getElementById("archiveCostSummary").textContent = formatCurrency(metrics.archiveCost);
@@ -923,10 +922,10 @@
         document.getElementById("savingsSummary").textContent = formatCurrency(metrics.savings);
         document.getElementById("savingsPercentSummary").textContent = `${formatNumber(metrics.savingsPercentage, 2)}%`;
 
-        document.getElementById("allocationFormula").textContent = `${formatNumber(totalStorage, 0)} TB total − ${formatNumber(state.includedStorage, 0)} TB included − ${formatNumber(state.archiveStorage, 0)} TB archive = ${formatNumber(metrics.paygStorage, 0)} TB PAYG`;
-        document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatCurrency(state.paygPrice)} / GB + ${formatNumber(state.archiveStorage, 0)} TB × ${formatCurrency(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;
+        document.getElementById("allocationFormula").textContent = `${formatNumber(totalStorage, 0)} TB total − ${formatNumber(state.includedStorage, 0)} TB included − ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive = ${formatNumber(metrics.paygStorage, 0)} TB PAYG`;
+        document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatCurrency(state.paygPrice)} / GB + ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive × ${formatCurrency(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;
 
-        applyBarHeights(totalStorage, state.includedStorage, metrics.paygStorage, state.archiveStorage);
+        applyBarHeights(totalStorage, state.includedStorage, metrics.paygStorage, metrics.billableArchiveStorage);
 
         const includedLabel = document.getElementById("includedSegment").querySelector(".segment-label");
         const paygLabel = document.getElementById("paygSegment").querySelector(".segment-label");
@@ -934,7 +933,7 @@
 
         includedLabel.textContent = `${formatNumber(state.includedStorage, 0)} TB`;
         paygLabel.textContent = `${formatNumber(metrics.paygStorage, 0)} TB`;
-        archiveLabel.textContent = `${formatNumber(state.archiveStorage, 0)} TB`;
+        archiveLabel.textContent = `${formatNumber(metrics.billableArchiveStorage, 0)} TB`;
       }
 
       function bindInput(key) {

@@ -36,11 +36,11 @@ No build step or package installation is required. Open [index.html](index.html)
 | --- | ---: | --- | ---: |
 | Included Storage | 5 | TB | 0-1,000 TB |
 | Total Storage | 15 | TB | 0-2,000 TB |
-| Archive Storage | 3 | TB | 0-available additional storage |
+| Archive Storage | 3 | TB | 0-Total Storage |
 | PAYG Price | 0.20 | EUR/GB | 0-5 EUR/GB |
 | Archive Price | 0.05 | EUR/GB | 0-5 EUR/GB |
 
-Storage values use whole numbers. Price values support two decimal places. If Total Storage is below Included Storage, Total Storage is increased to match Included Storage. Archive Storage is reduced automatically when it exceeds the available additional storage.
+Storage values use whole numbers. Price values support two decimal places. If Total Storage is below Included Storage, Total Storage is increased to match Included Storage. Archive Storage can include data within the included quota, but only the archive portion above the included quota is billable.
 
 ## Calculation Model
 
@@ -48,16 +48,19 @@ The dashboard uses `1 TB = 1,000 GB` and applies these formulas:
 
 ```text
 Additional Storage = Total Storage - Included Storage
-PAYG Storage = Additional Storage - Archive Storage
+PAYG Storage = max(0, Additional Storage - Archive Storage)
 PAYG Cost = PAYG Storage × 1,000 × PAYG Price
-Archive Cost = Archive Storage × 1,000 × Archive Price
+Archive Cost = Billable Archive Storage × 1,000 × Archive Price
 Total Cost = PAYG Cost + Archive Cost
 Cost Without Archive = Additional Storage × 1,000 × PAYG Price
 Savings = Cost Without Archive - Total Cost
 Savings Percentage = Savings ÷ Cost Without Archive × 100
+Billable Archive Storage = min(Archive Storage, Total Storage - Included Storage)
 ```
 
-All calculations are performed client-side and update as values change.
+All calculations are performed client-side and update as values change. Archive cost is calculated from `min(Archive Storage, Total Storage - Included Storage)` so archived data within the licensed quota does not create an additional archive charge.
+
+The model follows the Microsoft 365 Archive pricing conditions described in the [Microsoft Learn pricing model](https://learn.microsoft.com/en-us/microsoft-365/archive/archive-pricing?view=o365-worldwide): storage is charged only when combined active and archived storage exceeds the tenant's included or licensed SharePoint capacity. It does not model reactivation charges because Microsoft eliminated that fee on March 31, 2025. The service and billing subscription must remain available for new archive actions; those operational states are outside this cost estimate.
 
 ## Visual Conventions
 

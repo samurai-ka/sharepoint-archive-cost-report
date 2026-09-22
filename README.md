@@ -17,7 +17,7 @@ A self-contained HTML dashboard for comparing included SharePoint storage, activ
 
 ```text
 .
-├── sharepoint-archive-cost-report.html
+├── index.html
 ├── README.md
 └── .github/
     ├── copilot-instructions.md
@@ -28,7 +28,7 @@ A self-contained HTML dashboard for comparing included SharePoint storage, activ
 
 ## Running Locally
 
-No build step or package installation is required. Open [sharepoint-archive-cost-report.html](sharepoint-archive-cost-report.html) directly from the filesystem in a modern browser.
+No build step or package installation is required. Open [index.html](index.html) directly from the filesystem in a modern browser.
 
 ## Inputs and Limits
 

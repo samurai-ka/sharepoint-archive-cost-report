@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SharePoint Archive Cost Report</title>
     <style>
+      /* Registers --kpi-savings-rotate as an animatable <angle>. Custom properties are not
+         interpolatable by default; this "Magic Card" technique relies on @property to make the
+         browser animate it smoothly, which is what lets the gradient below sweep instead of jump. */
+      @property --kpi-savings-rotate {
+        syntax: "<angle>";
+        initial-value: 0deg;
+        inherits: false;
+      }
+
       :root {
         --bg: #f3f2f1;
         --surface: #ffffff;
@@ -256,6 +265,45 @@
 
       .kpi-card.savings .kpi-value {
         color: var(--green20);
+      }
+
+      /* Rotating gradient glow, adapted from the Magic Card's animation: a thin ring (::before) plus
+         a soft blurred halo (::after) behind the Monthly Savings card, both filled with a gradient
+         that sweeps through --kpi-savings-rotate. position:relative without a z-index keeps this
+         card from becoming its own stacking context, so the negative-z-index pseudo-elements paint
+         behind the card's own background — only the few pixels they overflow by are visible — instead
+         of covering its text. */
+      .kpi-card.savings {
+        position: relative;
+      }
+
+      .kpi-card.savings::before,
+      .kpi-card.savings::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        border-radius: 14px;
+        background-image: linear-gradient(var(--kpi-savings-rotate), var(--yellowgreen10), var(--green20) 45%, var(--primary));
+        animation: kpi-savings-spin 2.5s linear infinite;
+      }
+
+      .kpi-card.savings::before {
+        inset: -3px;
+      }
+
+      .kpi-card.savings::after {
+        inset: -6px;
+        filter: blur(10px);
+        opacity: 0.65;
+      }
+
+      @keyframes kpi-savings-spin {
+        0% {
+          --kpi-savings-rotate: 0deg;
+        }
+        100% {
+          --kpi-savings-rotate: 360deg;
+        }
       }
 
       .chart-panel .panel-content {
@@ -605,7 +653,9 @@
 
       @media (prefers-reduced-motion: reduce) {
         .settings-panel,
-        .settings-panel::backdrop {
+        .settings-panel::backdrop,
+        .kpi-card.savings::before,
+        .kpi-card.savings::after {
           animation: none !important;
         }
       }

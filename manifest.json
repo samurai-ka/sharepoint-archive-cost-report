@@ -1,0 +1,31 @@
+{
+  "name": "SharePoint Archive Cost Report",
+  "short_name": "Archive Cost Report",
+  "description": "Storage allocation and monthly cost overview for SharePoint archive storage.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f3f2f1",
+  "theme_color": "#0078d4",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

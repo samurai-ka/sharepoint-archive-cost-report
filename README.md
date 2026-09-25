@@ -34,7 +34,7 @@ The settings are stored in the browser's `localStorage` and restored on the next
 
 ## Installing as an app
 
-The page ships a [web app manifest](manifest.json) and icons (`icons/`), so Edge or Chrome can install it as a standalone app: open the site, then use the browser menu → **Apps** → **Install this site as an app**. The app icon is the "Money" glyph from the [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) library on a Fluent-blue background.
+The page ships a [web app manifest](src/manifest.json) and icons (`src/icons/`), so Edge or Chrome can install it as a standalone app: open the site, then use the browser menu → **Apps** → **Install this site as an app**. The app icon is the "Money" glyph from the [Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons) library on a Fluent-blue background.
 
 ## GitHub Pages
 

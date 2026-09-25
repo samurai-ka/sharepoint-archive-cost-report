@@ -45,10 +45,6 @@ push to `main` that touches `src/`, using GitHub's Actions-based Pages deploymen
 (`actions/configure-pages`, `actions/upload-pages-artifact`, `actions/deploy-pages`). It can also be
 run manually from the Actions tab.
 
-**One-time setup** (repository admin, once): under **Settings → Pages**, set **Source** to
-**GitHub Actions**. Before this switch, Pages is served directly from the branch root, which no
-longer matches this layout now that the dashboard lives under `src/`.
-
 ## Contributing
 
 Keep changes focused, deterministic, and compatible with the single-file dashboard approach. Do not add secrets, tenant identifiers, tokens, or API keys.

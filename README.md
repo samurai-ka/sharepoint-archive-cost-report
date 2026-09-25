@@ -19,7 +19,7 @@ Billable Archive Storage = min(Archive Storage, Total Storage - Included Storage
 Yearly Cost = Monthly Cost × 12
 ```
 
-The KPI cards and the Storage Allocation card show monthly costs. The Yearly Cost Summary projects the current monthly costs over 12 months and assumes that the storage values stay constant.
+The KPI cards and the Storage Allocation card show monthly costs. The Yearly Cost Summary projects the current monthly costs (including Savings) over 12 months and assumes that the storage values stay constant.
 
 All calculations are performed client-side and update as values change.
 

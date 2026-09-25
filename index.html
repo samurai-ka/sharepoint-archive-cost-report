@@ -437,6 +437,16 @@
         font-weight: 700;
       }
 
+      /* Savings row: same green as the Monthly Savings KPI card. */
+      .summary-table .summary-savings th {
+        color: var(--text);
+      }
+
+      .summary-table .summary-savings td {
+        font-weight: 700;
+        color: var(--green20);
+      }
+
       .summary-panel .panel-content {
         padding-top: 14px;
       }
@@ -805,6 +815,10 @@
                   <tr class="summary-total">
                     <th scope="row">Total Cost</th>
                     <td id="totalCostSummary">€19,046.40</td>
+                  </tr>
+                  <tr class="summary-savings">
+                    <th scope="row">Savings</th>
+                    <td id="savingsSummary">€5,529.60</td>
                   </tr>
                 </tbody>
               </table>
@@ -1264,6 +1278,7 @@
         document.getElementById("archiveCostSummary").textContent = formatCurrency(metrics.archiveCost * MONTHS_PER_YEAR);
         document.getElementById("costWithoutArchiveSummary").textContent = formatCurrency(metrics.costWithoutArchive * MONTHS_PER_YEAR);
         document.getElementById("totalCostSummary").textContent = formatCurrency(metrics.totalCost * MONTHS_PER_YEAR);
+        document.getElementById("savingsSummary").textContent = formatCurrency(metrics.savings * MONTHS_PER_YEAR);
 
         document.getElementById("allocationFormula").textContent = `${formatNumber(totalStorage, 0)} TB total − ${formatNumber(state.includedStorage, 0)} TB included − ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive = ${formatNumber(metrics.paygStorage, 0)} TB PAYG`;
         document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatUnitPrice(state.paygPrice)} / GB + ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive × ${formatUnitPrice(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;

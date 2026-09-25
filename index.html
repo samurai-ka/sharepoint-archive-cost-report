@@ -272,26 +272,27 @@
          that sweeps through --kpi-savings-rotate. position:relative without a z-index keeps this
          card from becoming its own stacking context, so the negative-z-index pseudo-elements paint
          behind the card's own background — only the few pixels they overflow by are visible — instead
-         of covering its text. */
+         of covering its text. Only green tones are used, and the pseudo-elements only exist at all
+         (via the has-savings class set in render()) once the actual savings amount is nonzero. */
       .kpi-card.savings {
         position: relative;
       }
 
-      .kpi-card.savings::before,
-      .kpi-card.savings::after {
+      .kpi-card.savings.has-savings::before,
+      .kpi-card.savings.has-savings::after {
         content: "";
         position: absolute;
         z-index: -1;
         border-radius: 14px;
-        background-image: linear-gradient(var(--kpi-savings-rotate), var(--yellowgreen10), var(--green20) 45%, var(--primary));
+        background-image: linear-gradient(var(--kpi-savings-rotate), var(--yellowgreen10), var(--green20) 45%, var(--success));
         animation: kpi-savings-spin 2.5s linear infinite;
       }
 
-      .kpi-card.savings::before {
+      .kpi-card.savings.has-savings::before {
         inset: -3px;
       }
 
-      .kpi-card.savings::after {
+      .kpi-card.savings.has-savings::after {
         inset: -6px;
         filter: blur(10px);
         opacity: 0.65;
@@ -654,8 +655,8 @@
       @media (prefers-reduced-motion: reduce) {
         .settings-panel,
         .settings-panel::backdrop,
-        .kpi-card.savings::before,
-        .kpi-card.savings::after {
+        .kpi-card.savings.has-savings::before,
+        .kpi-card.savings.has-savings::after {
           animation: none !important;
         }
       }
@@ -1092,6 +1093,7 @@
       const priceLimit = 1000; // Per GB; leaves room for currencies with large amounts such as KRW or JPY.
       const MONTHS_PER_YEAR = 12; // Yearly Cost Summary = current monthly costs projected over a year.
       const GB_PER_TB = 1024; // Storage conversion: 1 TB = 1,024 GB (prices are per GB).
+      const SAVINGS_GLOW_EPSILON = 0.005; // Half a cent: ignores floating-point noise around exact 0.
 
       function getMaxArchiveStorage() {
         const maxArchive = Math.max(0, state.totalStorage);
@@ -1314,6 +1316,9 @@
         document.getElementById("kpiArchiveMeta").textContent = `${formatCurrency(metrics.archiveCost)} / month`;
         document.getElementById("kpiSavings").textContent = formatCurrency(metrics.savings);
         document.getElementById("kpiSavingsMeta").textContent = `${formatNumber(metrics.savingsPercentage, 2)}% vs. PAYG only`;
+        // The glow animation (see .kpi-card.savings.has-savings) only runs while there is an actual
+        // saving; with the default 0 TB archive, savings is exactly 0 and the card stays plain.
+        document.querySelector(".kpi-card.savings").classList.toggle("has-savings", Math.abs(metrics.savings) >= SAVINGS_GLOW_EPSILON);
 
         document.getElementById("includedLegend").textContent = `${formatNumber(state.includedStorage, 0)} TB`;
         document.getElementById("paygLegend").textContent = `${formatNumber(metrics.paygStorage, 0)} TB • ${formatUnitPrice(state.paygPrice)} / GB`;

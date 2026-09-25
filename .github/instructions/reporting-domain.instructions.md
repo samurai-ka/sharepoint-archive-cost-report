@@ -46,6 +46,6 @@ This project is about SharePoint archive storage and cost reporting. When genera
 - Show KPI cards for Total Storage, PAYG Storage, Archive Storage, and Monthly Savings
 - Use Fluent UI-inspired card treatments, balanced spacing, and clear hierarchy across all summary blocks
 - Display a live formula like: 15 TB total − 5 TB included − 3 TB archive = 7 TB PAYG
-- Show cost summary with Active PAYG Storage Cost, Archive Storage Cost, Total Cost, Cost Without Archive, Savings, and Savings Percentage
-- Show legend entries with current TB and current cost for archive and PAYG storage, plus included storage TB
+- Show a yearly cost summary (monthly costs × 12) with Cost Without Archive, Active PAYG Storage Cost, Archive Storage Cost, and Total Cost; Savings and Savings Percentage are shown in the Monthly Savings KPI card
+- Show legend entries with current TB and current cost for archive and PAYG storage, plus included storage TB, followed by a Total Cost row
 - Include footer text: "Disclaimer: Taxes, rounding differences, contractual terms and other cost components are not included. All information is provided without warranty."

@@ -385,6 +385,16 @@
         white-space: nowrap;
       }
 
+      /* Sum row below the legend entries: no color marker, no divider, emphasized amount. */
+      .legend-item.legend-total {
+        border-bottom: none;
+      }
+
+      .legend-total .legend-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+      }
+
       .summary-table {
         width: 100%;
         border-collapse: collapse;
@@ -418,12 +428,23 @@
         white-space: nowrap;
       }
 
-      #savingsPercentSummary {
-        color: var(--green20);
+      /* Sum row: same emphasis as the Total Cost row in the Storage Allocation legend. */
+      .summary-table .summary-total th {
+        color: var(--text);
+      }
+
+      .summary-table .summary-total td {
+        font-weight: 700;
       }
 
       .summary-panel .panel-content {
         padding-top: 14px;
+      }
+
+      .summary-note {
+        margin: 12px 0 0;
+        color: var(--text-secondary);
+        font-size: 0.82rem;
       }
 
       .formula-list {
@@ -737,6 +758,14 @@
                       </div>
                       <strong id="includedLegend" class="legend-value">5 TB</strong>
                     </div>
+                    <div class="legend-item legend-total">
+                      <span aria-hidden="true"></span>
+                      <div class="legend-details">
+                        <span class="legend-title">Total Cost</span>
+                        <span class="legend-meta">PAYG + Archive per month</span>
+                      </div>
+                      <strong id="totalCostLegend" class="legend-value">€1,550.00</strong>
+                    </div>
                   </div>
 
                   <div class="formula-list" aria-label="Live formula">
@@ -756,37 +785,30 @@
 
           <div class="panel summary-panel" aria-labelledby="summary-title">
             <div class="panel-header">
-              <h2 id="summary-title">Monthly Cost Summary</h2>
+              <h2 id="summary-title">Yearly Cost Summary</h2>
             </div>
             <div class="panel-content">
-              <table class="summary-table" aria-label="Monthly cost summary table">
+              <table class="summary-table" aria-label="Yearly cost summary table">
                 <tbody>
                   <tr>
                     <th scope="row">Cost Without Archive</th>
-                    <td id="costWithoutArchiveSummary">€2,000.00</td>
+                    <td id="costWithoutArchiveSummary">€24,000.00</td>
                   </tr>
                   <tr>
                     <th scope="row">Active PAYG Storage Cost</th>
-                    <td id="paygCostSummary">€1,400.00</td>
+                    <td id="paygCostSummary">€16,800.00</td>
                   </tr>
                   <tr>
                     <th scope="row">Archive Storage Cost</th>
-                    <td id="archiveCostSummary">€150.00</td>
+                    <td id="archiveCostSummary">€1,800.00</td>
                   </tr>
-                  <tr>
+                  <tr class="summary-total">
                     <th scope="row">Total Cost</th>
-                    <td id="totalCostSummary">€1,550.00</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Savings</th>
-                    <td id="savingsSummary">€450.00</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">Savings Percentage</th>
-                    <td id="savingsPercentSummary">22.50%</td>
+                    <td id="totalCostSummary">€18,600.00</td>
                   </tr>
                 </tbody>
               </table>
+              <p class="summary-note">Current monthly costs × 12 months, assuming the storage values stay constant.</p>
             </div>
           </div>
         </section>
@@ -1003,6 +1025,7 @@
       const includedStorageLimit = 1000;
       const totalStorageLimit = 2000;
       const priceLimit = 1000; // Per GB; leaves room for currencies with large amounts such as KRW or JPY.
+      const MONTHS_PER_YEAR = 12; // Yearly Cost Summary = current monthly costs projected over a year.
 
       function getMaxArchiveStorage() {
         const maxArchive = Math.max(0, state.totalStorage);
@@ -1234,13 +1257,12 @@
           : `${formatNumber(state.archiveStorage, 0)} TB`;
         document.getElementById("archiveLegend").textContent = `${archiveLegendValue} • ${formatUnitPrice(state.archivePrice)} / GB`;
         document.getElementById("archiveLegendCost").textContent = formatCurrency(metrics.archiveCost);
+        document.getElementById("totalCostLegend").textContent = formatCurrency(metrics.totalCost);
 
-        document.getElementById("paygCostSummary").textContent = formatCurrency(metrics.paygCost);
-        document.getElementById("archiveCostSummary").textContent = formatCurrency(metrics.archiveCost);
-        document.getElementById("totalCostSummary").textContent = formatCurrency(metrics.totalCost);
-        document.getElementById("costWithoutArchiveSummary").textContent = formatCurrency(metrics.costWithoutArchive);
-        document.getElementById("savingsSummary").textContent = formatCurrency(metrics.savings);
-        document.getElementById("savingsPercentSummary").textContent = `${formatNumber(metrics.savingsPercentage, 2)}%`;
+        document.getElementById("paygCostSummary").textContent = formatCurrency(metrics.paygCost * MONTHS_PER_YEAR);
+        document.getElementById("archiveCostSummary").textContent = formatCurrency(metrics.archiveCost * MONTHS_PER_YEAR);
+        document.getElementById("costWithoutArchiveSummary").textContent = formatCurrency(metrics.costWithoutArchive * MONTHS_PER_YEAR);
+        document.getElementById("totalCostSummary").textContent = formatCurrency(metrics.totalCost * MONTHS_PER_YEAR);
 
         document.getElementById("allocationFormula").textContent = `${formatNumber(totalStorage, 0)} TB total − ${formatNumber(state.includedStorage, 0)} TB included − ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive = ${formatNumber(metrics.paygStorage, 0)} TB PAYG`;
         document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatUnitPrice(state.paygPrice)} / GB + ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive × ${formatUnitPrice(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;

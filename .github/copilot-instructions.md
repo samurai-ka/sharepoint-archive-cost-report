@@ -45,7 +45,7 @@ This repository supports a SharePoint archive cost report and related dashboardi
 - Create a single large vertical stacked bar with Included Storage at the bottom, PAYG in the middle, and Archive on top.
 - Use color coding: green for Included, Microsoft blue for PAYG, purple for Archive.
 - Display labels inside each segment, along with a legend showing current TB and cost values.
-- Include a monthly cost summary, a live formula section, and a footer disclaimer.
+- Include a yearly cost summary (monthly costs × 12), a live formula section, and a footer disclaimer.
 
 ## Coding and reporting standards
 - Use descriptive names for files, variables, and report fields.

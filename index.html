@@ -316,10 +316,10 @@
         box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85);
         pointer-events: none;
         z-index: 1;
-        transition: bottom 0.25s ease;
       }
 
-      /* No min-height or padding: a segment must shrink linearly to exactly 0 %. */
+      /* No min-height or padding: a segment must shrink linearly to exactly 0 %.
+         No CSS transition either: the bar is animated as a whole in JavaScript (see drawBar). */
       .stack-segment {
         flex: 0 0 auto;
         height: 0;
@@ -328,7 +328,6 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        transition: height 0.25s ease;
       }
 
       .stack-segment.included {
@@ -351,7 +350,6 @@
         text-align: center;
         white-space: nowrap;
         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        transition: opacity 0.25s ease;
       }
 
       .segment-label small {
@@ -987,28 +985,65 @@
         };
       }
 
+      // The bar is animated here instead of with one CSS transition per segment: those transitions
+      // restart independently while a slider is dragged, so the segments briefly stop adding up to
+      // 100 % and the stack jumps. Moving all segments and the Included limit marker by the same
+      // fraction per frame keeps the stack consistent at every point of the animation.
+      const BAR_STEP_PER_FRAME = 0.3; // Fraction of the remaining distance covered per frame.
+      const BAR_SETTLED_PERCENT = 0.05;
+      const LABEL_FADE_PERCENT = 8;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const barSegments = {
+        archive: document.getElementById("archiveSegment"),
+        payg: document.getElementById("paygSegment"),
+        included: document.getElementById("includedSegment")
+      };
+      const includedLimitMarker = document.getElementById("includedLimitMarker");
+      const barAnimation = { shown: null, target: null, frameId: 0 };
+
+      function toBarPercent(amount, totalAmount) {
+        return totalAmount > 0 ? Math.min(100, Math.max(0, (amount / totalAmount) * 100)) : 0;
+      }
+
+      function drawBar(percentages) {
+        // Segments stay in the DOM and scale linearly down to 0 %; labels fade out below LABEL_FADE_PERCENT.
+        Object.entries(barSegments).forEach(([key, segment]) => {
+          segment.style.height = `${percentages[key]}%`;
+          segment.querySelector(".segment-label").style.opacity = String(Math.min(1, percentages[key] / LABEL_FADE_PERCENT));
+        });
+        includedLimitMarker.style.bottom = `${percentages.includedLimit}%`;
+      }
+
+      function animateBar() {
+        const { shown, target } = barAnimation;
+        const keys = Object.keys(target);
+        const settled = keys.every((key) => Math.abs(target[key] - shown[key]) <= BAR_SETTLED_PERCENT);
+
+        keys.forEach((key) => {
+          shown[key] = settled ? target[key] : shown[key] + (target[key] - shown[key]) * BAR_STEP_PER_FRAME;
+        });
+
+        drawBar(shown);
+        barAnimation.frameId = settled ? 0 : window.requestAnimationFrame(animateBar);
+      }
+
       function applyBarHeights(totalAmount, includedLimit, included, payg, archive) {
-        const includedSegment = document.getElementById("includedSegment");
-        const paygSegment = document.getElementById("paygSegment");
-        const archiveSegment = document.getElementById("archiveSegment");
-        const includedLimitMarker = document.getElementById("includedLimitMarker");
-
-        const safeTotal = totalAmount > 0 ? totalAmount : 1;
-        const includedLimitPercent = Math.min(100, Math.max(0, (includedLimit / safeTotal) * 100));
-        includedLimitMarker.style.bottom = `${includedLimitPercent}%`;
-
-        // Segments stay in the DOM and scale linearly from 0 % to 100 %, so they grow and shrink
-        // smoothly instead of popping in or out. Labels fade out below LABEL_FADE_PERCENT.
-        const LABEL_FADE_PERCENT = 8;
-        const setSegment = (segment, amount) => {
-          const percent = Math.min(100, Math.max(0, (amount / safeTotal) * 100));
-          segment.style.height = `${percent}%`;
-          segment.querySelector(".segment-label").style.opacity = String(Math.min(1, percent / LABEL_FADE_PERCENT));
+        barAnimation.target = {
+          archive: toBarPercent(archive, totalAmount),
+          payg: toBarPercent(payg, totalAmount),
+          included: toBarPercent(included, totalAmount),
+          includedLimit: toBarPercent(includedLimit, totalAmount)
         };
 
-        setSegment(archiveSegment, archive);
-        setSegment(paygSegment, payg);
-        setSegment(includedSegment, included);
+        if (!barAnimation.shown || reducedMotion.matches) {
+          barAnimation.shown = { ...barAnimation.target };
+          drawBar(barAnimation.shown);
+          return;
+        }
+
+        if (!barAnimation.frameId) {
+          barAnimation.frameId = window.requestAnimationFrame(animateBar);
+        }
       }
 
       function render() {

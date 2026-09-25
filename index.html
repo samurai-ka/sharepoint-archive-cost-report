@@ -792,19 +792,19 @@
                 <tbody>
                   <tr>
                     <th scope="row">Cost Without Archive</th>
-                    <td id="costWithoutArchiveSummary">€24,000.00</td>
+                    <td id="costWithoutArchiveSummary">€24,576.00</td>
                   </tr>
                   <tr>
                     <th scope="row">Active PAYG Storage Cost</th>
-                    <td id="paygCostSummary">€16,800.00</td>
+                    <td id="paygCostSummary">€17,203.20</td>
                   </tr>
                   <tr>
                     <th scope="row">Archive Storage Cost</th>
-                    <td id="archiveCostSummary">€1,800.00</td>
+                    <td id="archiveCostSummary">€1,843.20</td>
                   </tr>
                   <tr class="summary-total">
                     <th scope="row">Total Cost</th>
-                    <td id="totalCostSummary">€18,600.00</td>
+                    <td id="totalCostSummary">€19,046.40</td>
                   </tr>
                 </tbody>
               </table>
@@ -1026,6 +1026,7 @@
       const totalStorageLimit = 2000;
       const priceLimit = 1000; // Per GB; leaves room for currencies with large amounts such as KRW or JPY.
       const MONTHS_PER_YEAR = 12; // Yearly Cost Summary = current monthly costs projected over a year.
+      const GB_PER_TB = 1024; // Storage conversion: 1 TB = 1,024 GB (prices are per GB).
 
       function getMaxArchiveStorage() {
         const maxArchive = Math.max(0, state.totalStorage);
@@ -1145,10 +1146,10 @@
         const paygStorage = Math.max(0, additionalStorage - state.archiveStorage);
         const billableArchiveStorage = Math.min(state.archiveStorage, additionalStorage);
 
-        const paygCost = paygStorage * 1000 * state.paygPrice;
-        const archiveCost = billableArchiveStorage * 1000 * state.archivePrice;
+        const paygCost = paygStorage * GB_PER_TB * state.paygPrice;
+        const archiveCost = billableArchiveStorage * GB_PER_TB * state.archivePrice;
         const totalCost = paygCost + archiveCost;
-        const costWithoutArchive = additionalStorage * 1000 * state.paygPrice;
+        const costWithoutArchive = additionalStorage * GB_PER_TB * state.paygPrice;
         const savings = costWithoutArchive - totalCost;
         const savingsPercentage = costWithoutArchive > 0 ? (savings / costWithoutArchive) * 100 : 0;
 

@@ -4,15 +4,15 @@ A self-contained HTML dashboard for comparing included SharePoint storage, activ
 
 ## Calculation Model
 
-The dashboard uses `1 TB = 1,000 GB` and applies these formulas:
+The dashboard uses `1 TB = 1,024 GB` and applies these formulas:
 
 ```text
 Additional Storage = Total Storage - Included Storage
 PAYG Storage = max(0, Additional Storage - Archive Storage)
-PAYG Cost = PAYG Storage × 1,000 × PAYG Price
-Archive Cost = Billable Archive Storage × 1,000 × Archive Price
+PAYG Cost = PAYG Storage × 1,024 × PAYG Price
+Archive Cost = Billable Archive Storage × 1,024 × Archive Price
 Total Cost = PAYG Cost + Archive Cost
-Cost Without Archive = Additional Storage × 1,000 × PAYG Price
+Cost Without Archive = Additional Storage × 1,024 × PAYG Price
 Savings = Cost Without Archive - Total Cost
 Savings Percentage = Savings ÷ Cost Without Archive × 100
 Billable Archive Storage = min(Archive Storage, Total Storage - Included Storage)

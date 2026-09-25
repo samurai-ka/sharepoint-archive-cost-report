@@ -21,7 +21,7 @@ This project is about SharePoint archive storage and cost reporting. When genera
 - PAYG Price default: €0.20/GB
 - Archive Price default: €0.05/GB
 - Currency, PAYG Price and Archive Price are persisted in localStorage
-- 1 TB = 1000 GB
+- 1 TB = 1024 GB
 
 ## Business rules
 
@@ -34,10 +34,10 @@ This project is about SharePoint archive storage and cost reporting. When genera
 
 ## Cost formulas
 
-- PAYG Cost = PAYG Storage × 1000 × PAYG Price
-- Archive Cost = Archive Storage × 1000 × Archive Price
+- PAYG Cost = PAYG Storage × 1024 × PAYG Price
+- Archive Cost = Archive Storage × 1024 × Archive Price
 - Total Cost = PAYG Cost + Archive Cost
-- Cost Without Archive = Additional Storage × 1000 × PAYG Price
+- Cost Without Archive = Additional Storage × 1024 × PAYG Price
 - Savings = Cost Without Archive - Total Cost
 - Savings Percentage = Savings ÷ Cost Without Archive × 100
 

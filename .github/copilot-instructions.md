@@ -23,7 +23,7 @@ This repository supports a SharePoint archive cost report and related dashboardi
 
 ## Business logic requirements
 - Compare Included Storage, Active PAYG Storage, and SharePoint Archive Storage.
-- Use 1 TB = 1000 GB for all calculations.
+- Use 1 TB = 1024 GB for all calculations.
 - Additional Storage = Total Storage - Included Storage.
 - Archive Storage cannot exceed Additional Storage.
 - PAYG Storage = Additional Storage - Archive Storage.
@@ -32,10 +32,10 @@ This repository supports a SharePoint archive cost report and related dashboardi
 - Validate negative values, zero values, large values above 10,000 TB, and invalid ranges without JavaScript errors.
 
 ## Cost and reporting rules
-- PAYG Cost = PAYG Storage × 1000 × PAYG Price
-- Archive Cost = Archive Storage × 1000 × Archive Price
+- PAYG Cost = PAYG Storage × 1024 × PAYG Price
+- Archive Cost = Archive Storage × 1024 × Archive Price
 - Total Cost = PAYG Cost + Archive Cost
-- Cost Without Archive = Additional Storage × 1000 × PAYG Price
+- Cost Without Archive = Additional Storage × 1024 × PAYG Price
 - Savings = Cost Without Archive - Total Cost
 - Savings Percentage = Savings ÷ Cost Without Archive × 100
 - Keep units, totals, and formulas clearly visible in the dashboard output.

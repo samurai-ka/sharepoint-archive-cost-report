@@ -17,8 +17,10 @@ This project is about SharePoint archive storage and cost reporting. When genera
 - Included Storage default: 1 TB
 - Total Storage default: 1 TB
 - Archive Storage default: 0 TB
+- Currency default: EUR (selectable in the Settings panel from the Azure Pricing Calculator currencies; no conversion)
 - PAYG Price default: €0.20/GB
 - Archive Price default: €0.05/GB
+- Currency, PAYG Price and Archive Price are persisted in localStorage
 - 1 TB = 1000 GB
 
 ## Business rules

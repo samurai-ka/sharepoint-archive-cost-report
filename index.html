@@ -72,25 +72,26 @@
         font-size: 0.98rem;
       }
 
-      .status-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: var(--primary-soft);
-        color: var(--primary-dark);
-        font-weight: 600;
-        font-size: 0.85rem;
-        border: 1px solid rgba(0, 120, 212, 0.1);
+      /* Fluent UI link style; it is a button because it opens the Settings panel instead of navigating. */
+      .settings-link {
+        border: none;
+        background: none;
+        padding: 6px 4px;
+        border-radius: 4px;
+        font: inherit;
+        font-size: 1.15rem;
+        color: var(--primary);
+        cursor: pointer;
       }
 
-      .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: var(--primary);
-        display: inline-block;
+      .settings-link:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+      }
+
+      .settings-link:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
       }
 
       .dashboard-grid {
@@ -157,37 +158,14 @@
         align-items: center;
       }
 
-      .price-field-shell {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px;
-        align-items: center;
-      }
-
-      .edit-price-button {
-        border: 1px solid var(--border);
-        background: var(--surface-alt);
-        color: var(--text);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font: inherit;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s ease, border-color 0.2s ease;
-      }
-
-      .edit-price-button:hover {
-        background: var(--primary-soft);
-        border-color: rgba(0, 120, 212, 0.25);
-      }
-
       input[type="range"] {
         width: 100%;
         accent-color: var(--primary);
         cursor: pointer;
       }
 
-      input[type="number"] {
+      input[type="number"],
+      .select-input {
         width: 100%;
         border: 1px solid var(--border);
         border-radius: 10px;
@@ -197,14 +175,20 @@
         color: var(--text);
       }
 
-      input[readonly] {
-        background: #f3f2f1;
-        color: var(--text-secondary);
-        cursor: default;
+      .select-input {
+        appearance: none;
+        padding-right: 36px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23605e5c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 12px;
+        font-family: inherit;
+        cursor: pointer;
       }
 
       input[type="number"]:focus,
-      input[type="range"]:focus {
+      input[type="range"]:focus,
+      .select-input:focus {
         outline: 2px solid rgba(0, 120, 212, 0.2);
         outline-offset: 2px;
       }
@@ -486,6 +470,114 @@
         font-weight: 600;
       }
 
+      /* Settings panel: Fluent UI overlay panel anchored to the right edge. */
+      .settings-panel {
+        position: fixed;
+        inset: 0 0 0 auto;
+        width: min(340px, 100vw);
+        max-width: 100vw;
+        height: 100%;
+        max-height: 100%;
+        margin: 0;
+        padding: 0;
+        border: none;
+        overflow: hidden;
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.12), 0 32px 64px rgba(0, 0, 0, 0.14);
+      }
+
+      .settings-panel[open] {
+        display: flex;
+        flex-direction: column;
+        animation: settings-panel-in 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+      }
+
+      .settings-panel::backdrop {
+        background: rgba(0, 0, 0, 0.4);
+        animation: settings-backdrop-in 0.25s ease;
+      }
+
+      .settings-panel.is-closing {
+        animation: settings-panel-out 0.2s cubic-bezier(0.9, 0.1, 1, 0.2) forwards;
+      }
+
+      .settings-panel.is-closing::backdrop {
+        animation: settings-backdrop-out 0.2s ease forwards;
+      }
+
+      .settings-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 20px 20px 12px 24px;
+      }
+
+      .settings-panel-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      .settings-close-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .settings-close-button:hover {
+        background: var(--surface-subtle);
+      }
+
+      .settings-close-button:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 1px;
+      }
+
+      .settings-panel-content {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 12px 24px 24px;
+      }
+
+      .settings-note {
+        margin: 4px 0 0;
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+        line-height: 1.5;
+      }
+
+      @keyframes settings-panel-in {
+        from { transform: translateX(100%); }
+      }
+
+      @keyframes settings-panel-out {
+        to { transform: translateX(100%); }
+      }
+
+      @keyframes settings-backdrop-in {
+        from { opacity: 0; }
+      }
+
+      @keyframes settings-backdrop-out {
+        to { opacity: 0; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .settings-panel,
+        .settings-panel::backdrop {
+          animation: none !important;
+        }
+      }
+
       @media (max-width: 980px) {
         .dashboard-grid {
           grid-template-columns: 1fr;
@@ -528,10 +620,7 @@
           <h1>SharePoint Archive Cost Report</h1>
           <p>Storage allocation and monthly cost overview</p>
         </div>
-        <div class="status-chip" aria-label="Dashboard status">
-          <span class="status-dot"></span>
-          Live estimate
-        </div>
+        <button type="button" id="settingsButton" class="settings-link" aria-haspopup="dialog" aria-controls="settingsPanel">Settings</button>
       </header>
 
       <main class="dashboard-grid">
@@ -570,28 +659,6 @@
               <div class="input-row">
                 <input id="archiveStorageRange" type="range" min="0" max="2000" step="1" value="0" />
                 <input id="archiveStorageInput" type="number" min="0" max="2000" step="1" value="0" aria-label="Archive Storage in TB" />
-              </div>
-            </div>
-
-            <div class="field-group">
-              <div class="field-row">
-                <label class="field-label" for="paygPriceInput">PAYG Price</label>
-                <span class="field-unit">€/GB</span>
-              </div>
-              <div class="price-field-shell">
-                <input id="paygPriceInput" type="number" min="0" max="5" step="0.01" value="0.20" aria-label="PAYG Price in EUR per GB" readonly />
-                <button type="button" class="edit-price-button" data-target="paygPrice">Edit</button>
-              </div>
-            </div>
-
-            <div class="field-group">
-              <div class="field-row">
-                <label class="field-label" for="archivePriceInput">Archive Price</label>
-                <span class="field-unit">€/GB</span>
-              </div>
-              <div class="price-field-shell">
-                <input id="archivePriceInput" type="number" min="0" max="5" step="0.01" value="0.05" aria-label="Archive Price in EUR per GB" readonly />
-                <button type="button" class="edit-price-button" data-target="archivePrice">Edit</button>
               </div>
             </div>
 
@@ -732,6 +799,43 @@
       </footer>
     </div>
 
+    <dialog id="settingsPanel" class="settings-panel" aria-labelledby="settings-title">
+      <div class="settings-panel-header">
+        <h2 id="settings-title">Settings</h2>
+        <button type="button" id="settingsCloseButton" class="settings-close-button" aria-label="Close settings">
+          <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="settings-panel-content">
+        <div class="field-group">
+          <div class="field-row">
+            <label class="field-label" for="currencySelect">Currency</label>
+          </div>
+          <select id="currencySelect" class="select-input"></select>
+        </div>
+
+        <div class="field-group">
+          <div class="field-row">
+            <label class="field-label" for="paygPriceInput">PAYG Price</label>
+            <span class="field-unit" data-role="price-unit">€/GB</span>
+          </div>
+          <input id="paygPriceInput" type="number" min="0" max="1000" step="0.01" value="0.20" aria-label="PAYG Price in EUR per GB" />
+        </div>
+
+        <div class="field-group">
+          <div class="field-row">
+            <label class="field-label" for="archivePriceInput">Archive Price</label>
+            <span class="field-unit" data-role="price-unit">€/GB</span>
+          </div>
+          <input id="archivePriceInput" type="number" min="0" max="1000" step="0.01" value="0.05" aria-label="Archive Price in EUR per GB" />
+        </div>
+
+        <p class="settings-note">Settings are saved in this browser. Changing the currency does not convert the prices; enter them in the selected currency.</p>
+      </div>
+    </dialog>
+
     <script>
       "use strict";
 
@@ -739,16 +843,66 @@
         includedStorage: 1,
         totalStorage: 1,
         archiveStorage: 0,
+        currency: "EUR",
         paygPrice: 0.2,
         archivePrice: 0.05
       };
+
+      // Currencies offered by the Azure pricing calculator, in the calculator's order. Symbols are
+      // taken from Intl so the drop-down and every formatted amount show the same symbol.
+      const CURRENCIES = [
+        { code: "USD", label: "United States – Dollar" },
+        { code: "AUD", label: "Australia – Dollar" },
+        { code: "BRL", label: "Brazil – Real" },
+        { code: "CAD", label: "Canada – Dollar" },
+        { code: "DKK", label: "Denmark – Krone", narrowSymbol: true },
+        { code: "EUR", label: "Euro Zone – Euro" },
+        { code: "INR", label: "India – Rupee" },
+        { code: "JPY", label: "Japan – Yen" },
+        { code: "KRW", label: "Korea – Won" },
+        { code: "NZD", label: "New Zealand – Dollar" },
+        { code: "NOK", label: "Norway – Krone", narrowSymbol: true },
+        { code: "RUB", label: "Russia – Ruble", narrowSymbol: true },
+        { code: "SEK", label: "Sweden – Krona", narrowSymbol: true },
+        { code: "CHF", label: "Switzerland – Franc" },
+        { code: "TWD", label: "Taiwan – Dollar" },
+        { code: "GBP", label: "United Kingdom – Pound" }
+      ];
+
+      // Values of the Settings panel are persisted in the browser (localStorage).
+      const SETTINGS_KEYS = ["currency", "paygPrice", "archivePrice"];
+      const SETTINGS_STORAGE_KEY = "sharepoint-archive-cost-report.settings";
+
+      function loadStoredSettings() {
+        try {
+          const stored = JSON.parse(window.localStorage.getItem(SETTINGS_STORAGE_KEY));
+          return stored !== null && typeof stored === "object" ? stored : {};
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function saveSettings() {
+        try {
+          const settings = Object.fromEntries(SETTINGS_KEYS.map((key) => [key, state[key]]));
+          window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+        } catch (error) {
+          // Browser storage can be blocked; the settings then only last until the page is reloaded.
+        }
+      }
+
+      // Stored values are only taken over when they have the expected type; normalizeState()
+      // then validates the currency code and clamps the prices like any other input.
+      const storedSettings = loadStoredSettings();
+      const storedNumber = (value, fallback) => (typeof value === "number" && Number.isFinite(value) ? value : fallback);
 
       const state = {
         includedStorage: DEFAULTS.includedStorage,
         totalStorage: DEFAULTS.totalStorage,
         archiveStorage: DEFAULTS.archiveStorage,
-        paygPrice: DEFAULTS.paygPrice,
-        archivePrice: DEFAULTS.archivePrice
+        currency: typeof storedSettings.currency === "string" ? storedSettings.currency : DEFAULTS.currency,
+        paygPrice: storedNumber(storedSettings.paygPrice, DEFAULTS.paygPrice),
+        archivePrice: storedNumber(storedSettings.archivePrice, DEFAULTS.archivePrice)
       };
 
       const rangeMap = {
@@ -765,11 +919,8 @@
         archivePrice: document.getElementById("archivePriceInput")
       };
 
-      const priceButtons = {
-        paygPrice: document.querySelector('[data-target="paygPrice"]'),
-        archivePrice: document.querySelector('[data-target="archivePrice"]')
-      };
-
+      const currencySelect = document.getElementById("currencySelect");
+      const priceUnitLabels = document.querySelectorAll('[data-role="price-unit"]');
       const validationMessage = document.getElementById("validationMessage");
 
       function formatNumber(value, digits = 0) {
@@ -779,13 +930,45 @@
         });
       }
 
+      const CURRENCY_LOCALE = "en-US";
+      let currencyFormat = null;
+
+      function getCurrency(code) {
+        return CURRENCIES.find((currency) => currency.code === code);
+      }
+
+      function currencyOptions(currency) {
+        // Krone, krona and ruble use their narrow symbol ("kr", "₽"); otherwise Intl shows the ISO code.
+        return { style: "currency", currency: currency.code, currencyDisplay: currency.narrowSymbol ? "narrowSymbol" : "symbol" };
+      }
+
+      function getCurrencySymbol(currency) {
+        return new Intl.NumberFormat(CURRENCY_LOCALE, currencyOptions(currency))
+          .formatToParts(0)
+          .find((part) => part.type === "currency").value;
+      }
+
+      function createCurrencyFormat(currency) {
+        const amount = new Intl.NumberFormat(CURRENCY_LOCALE, currencyOptions(currency));
+        const digits = amount.resolvedOptions().maximumFractionDigits;
+        // Per-GB prices keep up to four decimals so small prices are not rounded away (JPY and KRW have none).
+        const unitPriceDigits = { minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 4) };
+
+        return {
+          code: currency.code,
+          symbol: getCurrencySymbol(currency),
+          amount,
+          unitPrice: new Intl.NumberFormat(CURRENCY_LOCALE, { ...currencyOptions(currency), ...unitPriceDigits }),
+          inputValue: new Intl.NumberFormat(CURRENCY_LOCALE, { ...unitPriceDigits, useGrouping: false })
+        };
+      }
+
       function formatCurrency(value) {
-        return new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "EUR",
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).format(value);
+        return currencyFormat.amount.format(value);
+      }
+
+      function formatUnitPrice(value) {
+        return currencyFormat.unitPrice.format(value);
       }
 
       function setValidation(message) {
@@ -819,11 +1002,7 @@
 
       const includedStorageLimit = 1000;
       const totalStorageLimit = 2000;
-
-      const priceEditBackup = {
-        paygPrice: 0.2,
-        archivePrice: 0.05
-      };
+      const priceLimit = 1000; // Per GB; leaves room for currencies with large amounts such as KRW or JPY.
 
       function getMaxArchiveStorage() {
         const maxArchive = Math.max(0, state.totalStorage);
@@ -837,7 +1016,7 @@
         }
         if (inputMap[key]) {
           if (key === "paygPrice" || key === "archivePrice") {
-            inputMap[key].value = Number(nextValue).toFixed(2);
+            inputMap[key].value = currencyFormat.inputValue.format(nextValue);
           } else {
             inputMap[key].value = nextValue;
           }
@@ -855,40 +1034,18 @@
         }
       }
 
-      function setPriceEditing(key, isEditing, shouldRestore = false) {
-        const input = inputMap[key];
-        const button = priceButtons[key];
-
-        if (!input || !button) {
-          return;
-        }
-
-        if (isEditing) {
-          priceEditBackup[key] = Number(state[key] ?? 0);
-          input.value = Number(state[key] ?? 0).toFixed(2);
-          input.readOnly = false;
-          button.textContent = "Done";
-          input.focus();
-          input.select();
-          return;
-        }
-
-        if (shouldRestore) {
-          input.value = Number(priceEditBackup[key] ?? state[key] ?? 0).toFixed(2);
-          state[key] = Number(priceEditBackup[key] ?? state[key] ?? 0);
-        }
-
-        input.readOnly = true;
-        button.textContent = "Edit";
-      }
-
       function normalizeState() {
         let message = "";
+        state.currency = getCurrency(state.currency) ? state.currency : DEFAULTS.currency;
+        if (!currencyFormat || currencyFormat.code !== state.currency) {
+          currencyFormat = createCurrencyFormat(getCurrency(state.currency));
+        }
+
         const included = sanitizeNumber(state.includedStorage, DEFAULTS.includedStorage, 0, includedStorageLimit);
         const total = sanitizeNumber(state.totalStorage, DEFAULTS.totalStorage, 0, totalStorageLimit);
         const archive = sanitizeNumber(state.archiveStorage, DEFAULTS.archiveStorage, 0, Math.max(0, total));
-        const paygPrice = sanitizeNumber(state.paygPrice, DEFAULTS.paygPrice, 0, 5);
-        const archivePrice = sanitizeNumber(state.archivePrice, DEFAULTS.archivePrice, 0, 5);
+        const paygPrice = sanitizeNumber(state.paygPrice, DEFAULTS.paygPrice, 0, priceLimit);
+        const archivePrice = sanitizeNumber(state.archivePrice, DEFAULTS.archivePrice, 0, priceLimit);
 
         state.includedStorage = included;
         state.totalStorage = total;
@@ -913,12 +1070,12 @@
 
         if (state.paygPrice < 0) {
           state.paygPrice = 0;
-          message = "PAYG price was negative and has been reset to €0.00/GB.";
+          message = `PAYG price was negative and has been reset to ${formatUnitPrice(0)}/GB.`;
         }
 
         if (state.archivePrice < 0) {
           state.archivePrice = 0;
-          message = "Archive price was negative and has been reset to €0.00/GB.";
+          message = `Archive price was negative and has been reset to ${formatUnitPrice(0)}/GB.`;
         }
 
         if (state.totalStorage < state.includedStorage) {
@@ -946,7 +1103,7 @@
         }
 
         if (state.paygPrice === 0 && state.archivePrice === 0) {
-          message = "Both pricing values are zero. Costs will display as €0.00.";
+          message = `Both pricing values are zero. Costs will display as ${formatCurrency(0)}.`;
         }
 
         syncInputs("includedStorage", state.includedStorage);
@@ -1046,9 +1203,19 @@
         }
       }
 
+      function syncCurrencyLabels() {
+        currencySelect.value = state.currency;
+        priceUnitLabels.forEach((label) => {
+          label.textContent = `${currencyFormat.symbol}/GB`;
+        });
+        inputMap.paygPrice.setAttribute("aria-label", `PAYG Price in ${state.currency} per GB`);
+        inputMap.archivePrice.setAttribute("aria-label", `Archive Price in ${state.currency} per GB`);
+      }
+
       function render() {
         const metrics = calculateMetrics();
         const totalStorage = state.totalStorage;
+        syncCurrencyLabels();
 
         document.getElementById("kpiTotalStorage").textContent = `${formatNumber(totalStorage, 0)} TB`;
         document.getElementById("kpiTotalMeta").textContent = `${formatNumber(state.includedStorage, 0)} TB included`;
@@ -1060,12 +1227,12 @@
         document.getElementById("kpiSavingsMeta").textContent = `${formatNumber(metrics.savingsPercentage, 2)}% vs. PAYG only`;
 
         document.getElementById("includedLegend").textContent = `${formatNumber(state.includedStorage, 0)} TB`;
-        document.getElementById("paygLegend").textContent = `${formatNumber(metrics.paygStorage, 0)} TB • ${formatCurrency(state.paygPrice)} / GB`;
+        document.getElementById("paygLegend").textContent = `${formatNumber(metrics.paygStorage, 0)} TB • ${formatUnitPrice(state.paygPrice)} / GB`;
         document.getElementById("paygLegendCost").textContent = formatCurrency(metrics.paygCost);
         const archiveLegendValue = metrics.billableArchiveStorage < state.archiveStorage
           ? `${formatNumber(state.archiveStorage, 0)} TB (${formatNumber(metrics.billableArchiveStorage, 0)} TB billable)`
           : `${formatNumber(state.archiveStorage, 0)} TB`;
-        document.getElementById("archiveLegend").textContent = `${archiveLegendValue} • ${formatCurrency(state.archivePrice)} / GB`;
+        document.getElementById("archiveLegend").textContent = `${archiveLegendValue} • ${formatUnitPrice(state.archivePrice)} / GB`;
         document.getElementById("archiveLegendCost").textContent = formatCurrency(metrics.archiveCost);
 
         document.getElementById("paygCostSummary").textContent = formatCurrency(metrics.paygCost);
@@ -1076,7 +1243,7 @@
         document.getElementById("savingsPercentSummary").textContent = `${formatNumber(metrics.savingsPercentage, 2)}%`;
 
         document.getElementById("allocationFormula").textContent = `${formatNumber(totalStorage, 0)} TB total − ${formatNumber(state.includedStorage, 0)} TB included − ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive = ${formatNumber(metrics.paygStorage, 0)} TB PAYG`;
-        document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatCurrency(state.paygPrice)} / GB + ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive × ${formatCurrency(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;
+        document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatUnitPrice(state.paygPrice)} / GB + ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive × ${formatUnitPrice(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;
 
         // Archive is drawn from the top down. Once it exceeds the PAYG range it continues into
         // the Included range, so the Included segment only shows the non-archived remainder.
@@ -1123,6 +1290,9 @@
           }
 
           render();
+          if (SETTINGS_KEYS.includes(key)) {
+            saveSettings();
+          }
         };
 
         // Validate typed values only once editing is finished (blur or Enter), so intermediate
@@ -1144,52 +1314,92 @@
         }
       }
 
-      function bindPriceToggle(key) {
-        const inputElement = inputMap[key];
-        const button = priceButtons[key];
+      function populateCurrencySelect() {
+        CURRENCIES.forEach((currency) => {
+          const symbol = getCurrencySymbol(currency);
+          const label = symbol === currency.code
+            ? `${currency.label} ${currency.code}`
+            : `${currency.label} (${symbol}) ${currency.code}`;
+          currencySelect.add(new Option(label, currency.code));
+        });
+      }
 
-        if (!inputElement || !button) {
+      function bindCurrencySelect() {
+        currencySelect.addEventListener("change", () => {
+          state.currency = currencySelect.value;
+          render();
+          saveSettings();
+        });
+      }
+
+      const settingsButton = document.getElementById("settingsButton");
+      const settingsPanel = document.getElementById("settingsPanel");
+      const SETTINGS_CLOSE_FALLBACK_MS = 400;
+
+      function openSettings() {
+        settingsPanel.classList.remove("is-closing");
+        settingsPanel.showModal();
+        currencySelect.focus();
+      }
+
+      function closeSettings() {
+        if (!settingsPanel.open || settingsPanel.classList.contains("is-closing")) {
           return;
         }
 
-        button.addEventListener("click", () => {
-          const isEditing = !inputElement.readOnly;
+        // Blur first so a price that is still being typed fires its change event and gets saved.
+        if (settingsPanel.contains(document.activeElement)) {
+          document.activeElement.blur();
+        }
 
-          if (isEditing) {
-            const parsedValue = Number(inputElement.value || 0);
-            state[key] = Number.isFinite(parsedValue) ? parsedValue : Number(priceEditBackup[key] ?? 0);
-            setPriceEditing(key, false, false);
-            render();
+        let isClosed = false;
+        const onAnimationEnd = (event) => {
+          if (event.animationName === "settings-panel-out") {
+            finishClose();
+          }
+        };
+        const finishClose = () => {
+          if (isClosed) {
             return;
           }
+          isClosed = true;
+          settingsPanel.removeEventListener("animationend", onAnimationEnd);
+          settingsPanel.classList.remove("is-closing");
+          settingsPanel.close();
+          settingsButton.focus();
+        };
 
-          setPriceEditing(key, true, false);
+        if (reducedMotion.matches) {
+          finishClose();
+          return;
+        }
+
+        // Play the slide-out animation first; the timeout covers browsers that skip the animation.
+        settingsPanel.classList.add("is-closing");
+        settingsPanel.addEventListener("animationend", onAnimationEnd);
+        window.setTimeout(finishClose, SETTINGS_CLOSE_FALLBACK_MS);
+      }
+
+      function bindSettingsPanel() {
+        let pointerDownOnBackdrop = false;
+
+        settingsButton.addEventListener("click", openSettings);
+        document.getElementById("settingsCloseButton").addEventListener("click", closeSettings);
+
+        // Escape: animate the close instead of the dialog's instant default close.
+        settingsPanel.addEventListener("cancel", (event) => {
+          event.preventDefault();
+          closeSettings();
         });
 
-        inputElement.addEventListener("keydown", (event) => {
-          if (event.key === "Enter") {
-            const parsedValue = Number(inputElement.value || 0);
-            if (Number.isFinite(parsedValue)) {
-              state[key] = parsedValue;
-            }
-            setPriceEditing(key, false, false);
-            render();
-          }
-
-          if (event.key === "Escape") {
-            setPriceEditing(key, false, true);
-            render();
-          }
+        // Light dismiss: clicks on the backdrop target the dialog element itself. The press has to
+        // start there as well, so selecting text in an input and releasing outside keeps it open.
+        settingsPanel.addEventListener("pointerdown", (event) => {
+          pointerDownOnBackdrop = event.target === settingsPanel;
         });
-
-        inputElement.addEventListener("blur", () => {
-          if (!inputElement.readOnly) {
-            const parsedValue = Number(inputElement.value || 0);
-            if (Number.isFinite(parsedValue)) {
-              state[key] = parsedValue;
-            }
-            setPriceEditing(key, false, false);
-            render();
+        settingsPanel.addEventListener("click", (event) => {
+          if (pointerDownOnBackdrop && event.target === settingsPanel) {
+            closeSettings();
           }
         });
       }
@@ -1199,11 +1409,9 @@
       bindInput("archiveStorage");
       bindInput("paygPrice");
       bindInput("archivePrice");
-      bindPriceToggle("paygPrice");
-      bindPriceToggle("archivePrice");
-
-      setPriceEditing("paygPrice", false);
-      setPriceEditing("archivePrice", false);
+      populateCurrencySelect();
+      bindCurrencySelect();
+      bindSettingsPanel();
       render();
     </script>
   </body>

@@ -14,9 +14,9 @@ This project is about SharePoint archive storage and cost reporting. When genera
 
 ## Storage and cost model
 
-- Included Storage default: 5 TB
-- Total Storage default: 15 TB
-- Archive Storage default: 3 TB
+- Included Storage default: 1 TB
+- Total Storage default: 1 TB
+- Archive Storage default: 0 TB
 - PAYG Price default: €0.20/GB
 - Archive Price default: €0.05/GB
 - 1 TB = 1000 GB

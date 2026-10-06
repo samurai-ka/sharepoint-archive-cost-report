@@ -4,15 +4,16 @@ A self-contained HTML dashboard for comparing included SharePoint storage, activ
 
 ## Calculation Model
 
-The dashboard uses `1 TB = 1,024 GB` and applies these formulas:
+The dashboard uses `1 TB = 1,024 GB` and applies these formulas (storage values are in TB):
 
 ```text
+Price Units per TB = 1,024 for prices per GB, 1 for prices per TB
 Additional Storage = Total Storage - Included Storage
 PAYG Storage = max(0, Additional Storage - Archive Storage)
-PAYG Cost = PAYG Storage × 1,024 × PAYG Price
-Archive Cost = Billable Archive Storage × 1,024 × Archive Price
+PAYG Cost = PAYG Storage × Price Units per TB × PAYG Price
+Archive Cost = Billable Archive Storage × Price Units per TB × Archive Price
 Total Cost = PAYG Cost + Archive Cost
-Cost Without Archive = Additional Storage × 1,024 × PAYG Price
+Cost Without Archive = Additional Storage × Price Units per TB × PAYG Price
 Savings = Cost Without Archive - Total Cost
 Savings Percentage = Savings ÷ Cost Without Archive × 100
 Billable Archive Storage = min(Archive Storage, Total Storage - Included Storage)
@@ -21,6 +22,8 @@ Yearly Cost = Monthly Cost × 12
 
 The KPI cards and the Storage Allocation card show monthly costs. The Yearly Cost Summary projects the current monthly costs (including Savings) over 12 months and assumes that the storage values stay constant.
 
+The **GB / TB** switch in the top right corner of the Storage card selects whether prices are per GB (default) or per TB. It applies to the whole dashboard: the price inputs in Settings, the legend, the cost formula, and every cost calculation. Switching converts the current prices (× or ÷ 1,024), so the costs stay the same until you enter different prices.
+
 All calculations are performed client-side and update as values change.
 
 ## Settings
@@ -28,9 +31,9 @@ All calculations are performed client-side and update as values change.
 The **Settings** link in the header opens a panel on the right edge with:
 
 - **Currency**: all currencies offered by the Azure Pricing Calculator (default: Euro). Every amount in the dashboard uses the selected currency. Prices are not converted when the currency changes; enter them in the selected currency.
-- **PAYG Price** and **Archive Price** per GB (defaults: 0.20 and 0.05).
+- **PAYG Price** and **Archive Price** per GB or per TB, depending on the GB / TB switch (defaults: 0.20 and 0.05 per GB).
 
-The settings are stored in the browser's `localStorage` and restored on the next visit. Invalid stored values fall back to the defaults.
+The settings, including the GB / TB switch, are stored in the browser's `localStorage` and restored on the next visit. Invalid stored values fall back to the defaults.
 
 ## Installing as an app
 

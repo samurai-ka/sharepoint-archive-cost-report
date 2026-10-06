@@ -144,6 +144,98 @@
         align-self: start;
       }
 
+      /* Title on the left, a control (the GB/TB switch) in the top right corner. */
+      .control-panel .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      /* Fluent UI toggle switch with a unit label on each side: off = GB (left), on = TB (right).
+         The checkbox stays in the DOM (visually hidden) so it keeps keyboard and screen reader
+         support; it comes first so the labels and the track can react to :checked via "~". */
+      .unit-toggle {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .unit-toggle-input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        pointer-events: none;
+      }
+
+      .unit-toggle-label.gb {
+        order: -1;
+      }
+
+      .unit-toggle-input:not(:checked) ~ .unit-toggle-label.gb,
+      .unit-toggle-input:checked ~ .unit-toggle-label.tb {
+        color: var(--text);
+      }
+
+      .unit-toggle-track {
+        position: relative;
+        flex: 0 0 auto;
+        width: 40px;
+        height: 20px;
+        border: 1px solid var(--text-secondary);
+        border-radius: 10px;
+        background: var(--surface);
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+      }
+
+      .unit-toggle-track::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--text-secondary);
+        transition: transform 0.15s ease, background-color 0.15s ease;
+      }
+
+      .unit-toggle:hover .unit-toggle-track {
+        border-color: var(--text);
+      }
+
+      .unit-toggle:hover .unit-toggle-track::after {
+        background: var(--text);
+      }
+
+      .unit-toggle-input:checked ~ .unit-toggle-track {
+        border-color: var(--primary);
+        background: var(--primary);
+      }
+
+      .unit-toggle-input:checked ~ .unit-toggle-track::after {
+        background: #ffffff;
+        transform: translateX(20px);
+      }
+
+      .unit-toggle:hover .unit-toggle-input:checked ~ .unit-toggle-track {
+        border-color: var(--primary-dark);
+        background: var(--primary-dark);
+      }
+
+      .unit-toggle-input:focus-visible ~ .unit-toggle-track {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
       .field-group {
         margin-bottom: 18px;
       }
@@ -669,6 +761,11 @@
         .kpi-card.savings.has-savings::after {
           animation: none !important;
         }
+
+        .unit-toggle-track,
+        .unit-toggle-track::after {
+          transition: none;
+        }
       }
 
       @media (max-width: 980px) {
@@ -720,6 +817,12 @@
         <aside class="panel control-panel" aria-labelledby="inputs-title">
           <div class="panel-header">
             <h2 id="inputs-title">Storage</h2>
+            <label class="unit-toggle" title="Enter and calculate prices per GB or per TB">
+              <input id="priceUnitToggle" class="unit-toggle-input" type="checkbox" role="switch" aria-label="Prices per TB" />
+              <span class="unit-toggle-label gb" data-unit="GB" aria-hidden="true">GB</span>
+              <span class="unit-toggle-track" aria-hidden="true"></span>
+              <span class="unit-toggle-label tb" data-unit="TB" aria-hidden="true">TB</span>
+            </label>
           </div>
           <div class="panel-content">
             <div class="field-group">
@@ -930,7 +1033,7 @@
           <input id="archivePriceInput" type="number" min="0" max="1000" step="0.01" value="0.05" aria-label="Archive Price in EUR per GB" />
         </div>
 
-        <p class="settings-note">Settings are saved in this browser. Changing the currency does not convert the prices; enter them in the selected currency.</p>
+        <p class="settings-note">Settings are saved in this browser. Changing the currency does not convert the prices; enter them in the selected currency. The GB/TB switch in the Storage card converts the prices between per GB and per TB.</p>
       </div>
     </dialog>
 
@@ -942,7 +1045,8 @@
         totalStorage: 1,
         archiveStorage: 0,
         currency: "EUR",
-        paygPrice: 0.2,
+        priceUnit: "GB",
+        paygPrice: 0.2, // Per GB, like the price limit; converted when the price unit is TB.
         archivePrice: 0.05
       };
 
@@ -967,8 +1071,9 @@
         { code: "GBP", label: "United Kingdom – Pound" }
       ];
 
-      // Values of the Settings panel are persisted in the browser (localStorage).
-      const SETTINGS_KEYS = ["currency", "paygPrice", "archivePrice"];
+      // Values of the Settings panel are persisted in the browser (localStorage). The price unit
+      // (GB/TB switch in the Storage card) is stored with them because the prices are in that unit.
+      const SETTINGS_KEYS = ["currency", "priceUnit", "paygPrice", "archivePrice"];
       const SETTINGS_STORAGE_KEY = "sharepoint-archive-cost-report.settings";
 
       function loadStoredSettings() {
@@ -999,6 +1104,7 @@
         totalStorage: DEFAULTS.totalStorage,
         archiveStorage: DEFAULTS.archiveStorage,
         currency: typeof storedSettings.currency === "string" ? storedSettings.currency : DEFAULTS.currency,
+        priceUnit: storedSettings.priceUnit === "TB" ? "TB" : DEFAULTS.priceUnit,
         paygPrice: storedNumber(storedSettings.paygPrice, DEFAULTS.paygPrice),
         archivePrice: storedNumber(storedSettings.archivePrice, DEFAULTS.archivePrice)
       };
@@ -1018,6 +1124,7 @@
       };
 
       const currencySelect = document.getElementById("currencySelect");
+      const priceUnitToggle = document.getElementById("priceUnitToggle");
       const priceUnitLabels = document.querySelectorAll('[data-role="price-unit"]');
       const validationMessage = document.getElementById("validationMessage");
 
@@ -1102,7 +1209,9 @@
       const totalStorageLimit = 2000;
       const priceLimit = 1000; // Per GB; leaves room for currencies with large amounts such as KRW or JPY.
       const MONTHS_PER_YEAR = 12; // Yearly Cost Summary = current monthly costs projected over a year.
-      const GB_PER_TB = 1024; // Storage conversion: 1 TB = 1,024 GB (prices are per GB).
+      const GB_PER_TB = 1024; // Storage conversion: 1 TB = 1,024 GB.
+      // Size of one price unit in GB. Prices are entered per GB or per TB (GB/TB switch).
+      const PRICE_UNIT_GB = { GB: 1, TB: GB_PER_TB };
       const SAVINGS_GLOW_EPSILON = 0.005; // Half a cent: ignores floating-point noise around exact 0.
 
       function getMaxArchiveStorage() {
@@ -1145,8 +1254,9 @@
         const included = sanitizeNumber(state.includedStorage, DEFAULTS.includedStorage, 0, includedStorageLimit);
         const total = sanitizeNumber(state.totalStorage, DEFAULTS.totalStorage, 0, totalStorageLimit);
         const archive = sanitizeNumber(state.archiveStorage, DEFAULTS.archiveStorage, 0, Math.max(0, total));
-        const paygPrice = sanitizeNumber(state.paygPrice, DEFAULTS.paygPrice, 0, priceLimit);
-        const archivePrice = sanitizeNumber(state.archivePrice, DEFAULTS.archivePrice, 0, priceLimit);
+        const unitGb = PRICE_UNIT_GB[state.priceUnit];
+        const paygPrice = sanitizeNumber(state.paygPrice, DEFAULTS.paygPrice * unitGb, 0, priceLimit * unitGb);
+        const archivePrice = sanitizeNumber(state.archivePrice, DEFAULTS.archivePrice * unitGb, 0, priceLimit * unitGb);
 
         state.includedStorage = included;
         state.totalStorage = total;
@@ -1171,12 +1281,12 @@
 
         if (state.paygPrice < 0) {
           state.paygPrice = 0;
-          message = `PAYG price was negative and has been reset to ${formatUnitPrice(0)}/GB.`;
+          message = `PAYG price was negative and has been reset to ${formatUnitPrice(0)}/${state.priceUnit}.`;
         }
 
         if (state.archivePrice < 0) {
           state.archivePrice = 0;
-          message = `Archive price was negative and has been reset to ${formatUnitPrice(0)}/GB.`;
+          message = `Archive price was negative and has been reset to ${formatUnitPrice(0)}/${state.priceUnit}.`;
         }
 
         if (state.totalStorage < state.includedStorage) {
@@ -1223,10 +1333,12 @@
         const paygStorage = Math.max(0, additionalStorage - state.archiveStorage);
         const billableArchiveStorage = Math.min(state.archiveStorage, additionalStorage);
 
-        const paygCost = paygStorage * GB_PER_TB * state.paygPrice;
-        const archiveCost = billableArchiveStorage * GB_PER_TB * state.archivePrice;
+        // Storage is in TB; per-GB prices apply 1,024 times per TB, per-TB prices once.
+        const priceUnitsPerTb = GB_PER_TB / PRICE_UNIT_GB[state.priceUnit];
+        const paygCost = paygStorage * priceUnitsPerTb * state.paygPrice;
+        const archiveCost = billableArchiveStorage * priceUnitsPerTb * state.archivePrice;
         const totalCost = paygCost + archiveCost;
-        const costWithoutArchive = additionalStorage * GB_PER_TB * state.paygPrice;
+        const costWithoutArchive = additionalStorage * priceUnitsPerTb * state.paygPrice;
         const savings = costWithoutArchive - totalCost;
         const savingsPercentage = costWithoutArchive > 0 ? (savings / costWithoutArchive) * 100 : 0;
 
@@ -1304,19 +1416,27 @@
         }
       }
 
-      function syncCurrencyLabels() {
+      function syncPriceLabels() {
+        const unit = state.priceUnit;
         currencySelect.value = state.currency;
+        priceUnitToggle.checked = unit === "TB";
         priceUnitLabels.forEach((label) => {
-          label.textContent = `${currencyFormat.symbol}/GB`;
+          label.textContent = `${currencyFormat.symbol}/${unit}`;
         });
-        inputMap.paygPrice.setAttribute("aria-label", `PAYG Price in ${state.currency} per GB`);
-        inputMap.archivePrice.setAttribute("aria-label", `Archive Price in ${state.currency} per GB`);
+        inputMap.paygPrice.setAttribute("aria-label", `PAYG Price in ${state.currency} per ${unit}`);
+        inputMap.archivePrice.setAttribute("aria-label", `Archive Price in ${state.currency} per ${unit}`);
+        inputMap.paygPrice.max = String(priceLimit * PRICE_UNIT_GB[unit]);
+        inputMap.archivePrice.max = String(priceLimit * PRICE_UNIT_GB[unit]);
+      }
+
+      function formatPricePerUnit(value) {
+        return `${formatUnitPrice(value)} / ${state.priceUnit}`;
       }
 
       function render() {
         const metrics = calculateMetrics();
         const totalStorage = state.totalStorage;
-        syncCurrencyLabels();
+        syncPriceLabels();
 
         document.getElementById("kpiTotalStorage").textContent = `${formatNumber(totalStorage, 0)} TB`;
         document.getElementById("kpiTotalMeta").textContent = `${formatNumber(state.includedStorage, 0)} TB included`;
@@ -1331,12 +1451,12 @@
         document.querySelector(".kpi-card.savings").classList.toggle("has-savings", Math.abs(metrics.savings) >= SAVINGS_GLOW_EPSILON);
 
         document.getElementById("includedLegend").textContent = `${formatNumber(state.includedStorage, 0)} TB`;
-        document.getElementById("paygLegend").textContent = `${formatNumber(metrics.paygStorage, 0)} TB • ${formatUnitPrice(state.paygPrice)} / GB`;
+        document.getElementById("paygLegend").textContent = `${formatNumber(metrics.paygStorage, 0)} TB • ${formatPricePerUnit(state.paygPrice)}`;
         document.getElementById("paygLegendCost").textContent = formatCurrency(metrics.paygCost);
         const archiveLegendValue = metrics.billableArchiveStorage < state.archiveStorage
           ? `${formatNumber(state.archiveStorage, 0)} TB (${formatNumber(metrics.billableArchiveStorage, 0)} TB billable)`
           : `${formatNumber(state.archiveStorage, 0)} TB`;
-        document.getElementById("archiveLegend").textContent = `${archiveLegendValue} • ${formatUnitPrice(state.archivePrice)} / GB`;
+        document.getElementById("archiveLegend").textContent = `${archiveLegendValue} • ${formatPricePerUnit(state.archivePrice)}`;
         document.getElementById("archiveLegendCost").textContent = formatCurrency(metrics.archiveCost);
         document.getElementById("totalCostLegend").textContent = formatCurrency(metrics.totalCost);
 
@@ -1347,7 +1467,7 @@
         document.getElementById("savingsSummary").textContent = formatCurrency(metrics.savings * MONTHS_PER_YEAR);
 
         document.getElementById("allocationFormula").textContent = `${formatNumber(totalStorage, 0)} TB total − ${formatNumber(state.includedStorage, 0)} TB included − ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive = ${formatNumber(metrics.paygStorage, 0)} TB PAYG`;
-        document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatUnitPrice(state.paygPrice)} / GB + ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive × ${formatUnitPrice(state.archivePrice)} / GB = ${formatCurrency(metrics.totalCost)}`;
+        document.getElementById("costFormula").textContent = `${formatNumber(metrics.paygStorage, 0)} TB × ${formatPricePerUnit(state.paygPrice)} + ${formatNumber(metrics.billableArchiveStorage, 0)} TB billable archive × ${formatPricePerUnit(state.archivePrice)} = ${formatCurrency(metrics.totalCost)}`;
 
         // Archive is drawn from the top down. Once it exceeds the PAYG range it continues into
         // the Included range, so the Included segment only shows the non-archived remainder.
@@ -1436,6 +1556,30 @@
         });
       }
 
+      function bindPriceUnitToggle() {
+        priceUnitToggle.addEventListener("change", () => {
+          const nextUnit = priceUnitToggle.checked ? "TB" : "GB";
+          // Prices are converted so the costs stay the same. 1,024 is a power of two, so switching
+          // back and forth is exact in floating point and never drifts.
+          const factor = PRICE_UNIT_GB[nextUnit] / PRICE_UNIT_GB[state.priceUnit];
+          state.paygPrice *= factor;
+          state.archivePrice *= factor;
+          state.priceUnit = nextUnit;
+          render();
+          saveSettings();
+        });
+
+        // The whole switch is a label, so a click anywhere flips it. A click on the unit that is
+        // already active should not select the other one.
+        document.querySelectorAll(".unit-toggle [data-unit]").forEach((unitLabel) => {
+          unitLabel.addEventListener("click", (event) => {
+            if (unitLabel.dataset.unit === state.priceUnit) {
+              event.preventDefault();
+            }
+          });
+        });
+      }
+
       const settingsButton = document.getElementById("settingsButton");
       const settingsPanel = document.getElementById("settingsPanel");
       const SETTINGS_CLOSE_FALLBACK_MS = 400;
@@ -1515,6 +1659,7 @@
       bindInput("archivePrice");
       populateCurrencySelect();
       bindCurrencySelect();
+      bindPriceUnitToggle();
       bindSettingsPanel();
       render();
     </script>

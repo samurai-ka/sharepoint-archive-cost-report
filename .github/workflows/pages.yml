@@ -1,0 +1,45 @@
+name: Deploy to GitHub Pages
+
+# Publishes src/ (the dashboard, manifest and icons) to GitHub Pages using GitHub's
+# Actions-based Pages deployment. Requires the repository's Pages source to be set to
+# "GitHub Actions" under Settings > Pages — see README.md for the one-time setup step.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; let an in-progress run finish instead of cancelling it,
+# so a live deployment can never be interrupted midway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload src/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: src
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

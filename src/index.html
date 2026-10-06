@@ -831,8 +831,8 @@
                 <span class="field-unit" data-role="storage-unit">GB</span>
               </div>
               <div class="input-row">
-                <input id="includedStorageRange" type="range" min="0" max="1048576" step="1" value="1024" />
-                <input id="includedStorageInput" type="number" min="0" max="1048576" step="1" value="1024" aria-label="Included Storage in GB" />
+                <input id="includedStorageRange" type="range" min="0" max="1024" step="1" value="1" />
+                <input id="includedStorageInput" type="number" min="0" max="1024" step="1" value="1" aria-label="Included Storage in GB" />
               </div>
             </div>
 
@@ -842,8 +842,8 @@
                 <span class="field-unit" data-role="storage-unit">GB</span>
               </div>
               <div class="input-row">
-                <input id="totalStorageRange" type="range" min="0" max="2097152" step="1" value="1024" />
-                <input id="totalStorageInput" type="number" min="0" max="2097152" step="1" value="1024" aria-label="Total Storage in GB" />
+                <input id="totalStorageRange" type="range" min="0" max="2048" step="1" value="1" />
+                <input id="totalStorageInput" type="number" min="0" max="2048" step="1" value="1" aria-label="Total Storage in GB" />
               </div>
             </div>
 
@@ -853,8 +853,8 @@
                 <span class="field-unit" data-role="storage-unit">GB</span>
               </div>
               <div class="input-row">
-                <input id="archiveStorageRange" type="range" min="0" max="1024" step="1" value="0" />
-                <input id="archiveStorageInput" type="number" min="0" max="1024" step="1" value="0" aria-label="Archive Storage in GB" />
+                <input id="archiveStorageRange" type="range" min="0" max="2048" step="1" value="0" />
+                <input id="archiveStorageInput" type="number" min="0" max="2048" step="1" value="0" aria-label="Archive Storage in GB" />
               </div>
             </div>
 
@@ -1033,7 +1033,7 @@
           <input id="archivePriceInput" type="number" min="0" max="1000" step="0.01" value="0.05" aria-label="Archive Price in EUR per GB" />
         </div>
 
-        <p class="settings-note">Settings are saved in this browser. Changing the currency does not convert the prices; enter them in the selected currency. The GB/TB switch in the Storage card converts the storage values and prices between GB and TB.</p>
+        <p class="settings-note">Settings are saved in this browser. Changing the currency does not convert the prices; enter them in the selected currency. The GB/TB switch in the Storage card converts the prices between per GB and per TB.</p>
       </div>
     </dialog>
 
@@ -1041,15 +1041,16 @@
       "use strict";
 
       const GB_PER_TB = 1024; // Storage conversion: 1 TB = 1,024 GB.
-      // Size of one unit in GB. Storage values and prices are entered in the unit selected with the
-      // GB/TB switch in the Storage card (storage in GB and prices per GB, or both in TB).
+      // Size of one unit in GB. The GB/TB switch in the Storage card decides whether the storage
+      // values are GB or TB; the prices are per GB or per TB accordingly.
       const UNIT_GB = { GB: 1, TB: GB_PER_TB };
 
-      // Storage values and prices are given in GB, the default unit, and converted when TB is selected.
+      // Storage values are in the selected unit. Prices are per GB, the default unit, and converted
+      // when TB is selected.
       const DEFAULTS = {
         unit: "GB",
-        includedStorage: GB_PER_TB, // 1 TB
-        totalStorage: GB_PER_TB, // 1 TB
+        includedStorage: 1,
+        totalStorage: 1,
         archiveStorage: 0,
         currency: "EUR",
         paygPrice: 0.2,
@@ -1105,14 +1106,14 @@
       const storedSettings = loadStoredSettings();
       const storedNumber = (value, fallback) => (typeof value === "number" && Number.isFinite(value) ? value : fallback);
 
-      // Stored prices are already in the stored unit; the storage defaults are converted to it.
+      // Stored prices are already in the stored unit; the default prices are converted to it.
       const initialUnit = storedSettings.unit === "TB" ? "TB" : DEFAULTS.unit;
 
       const state = {
         unit: initialUnit,
-        includedStorage: DEFAULTS.includedStorage / UNIT_GB[initialUnit],
-        totalStorage: DEFAULTS.totalStorage / UNIT_GB[initialUnit],
-        archiveStorage: DEFAULTS.archiveStorage / UNIT_GB[initialUnit],
+        includedStorage: DEFAULTS.includedStorage,
+        totalStorage: DEFAULTS.totalStorage,
+        archiveStorage: DEFAULTS.archiveStorage,
         currency: typeof storedSettings.currency === "string" ? storedSettings.currency : DEFAULTS.currency,
         paygPrice: storedNumber(storedSettings.paygPrice, DEFAULTS.paygPrice * UNIT_GB[initialUnit]),
         archivePrice: storedNumber(storedSettings.archivePrice, DEFAULTS.archivePrice * UNIT_GB[initialUnit])
@@ -1145,14 +1146,9 @@
         });
       }
 
-      // Storage keeps up to two decimals: values switched from GB to TB are often fractional
-      // (1,500 GB = 1.46 TB), and rounding them to whole TB would hide where the costs come from.
       function formatStorage(value) {
-        return `${Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${state.unit}`;
+        return `${formatNumber(value, 0)} ${state.unit}`;
       }
-
-      // Number inputs need "." as decimal separator and no grouping.
-      const storageInputFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 4, useGrouping: false });
 
       const CURRENCY_LOCALE = "en-US";
       let currencyFormat = null;
@@ -1224,9 +1220,9 @@
         return parsed;
       }
 
-      // Limits are in GB like DEFAULTS and converted to the selected unit in normalizeState().
-      const includedStorageLimit = 1024 * GB_PER_TB; // 1,024 TB
-      const totalStorageLimit = 2048 * GB_PER_TB; // 2,048 TB
+      // Storage limits apply in either unit (up to 1,024 GB or 1,024 TB); the switch does not change them.
+      const includedStorageLimit = 1024;
+      const totalStorageLimit = 2048;
       const priceLimit = 1000; // Per GB; leaves room for currencies with large amounts such as KRW or JPY.
       const MONTHS_PER_YEAR = 12; // Yearly Cost Summary = current monthly costs projected over a year.
       const SAVINGS_GLOW_EPSILON = 0.005; // Half a cent: ignores floating-point noise around exact 0.
@@ -1245,7 +1241,7 @@
           if (key === "paygPrice" || key === "archivePrice") {
             inputMap[key].value = currencyFormat.inputValue.format(nextValue);
           } else {
-            inputMap[key].value = storageInputFormat.format(nextValue);
+            inputMap[key].value = nextValue;
           }
         }
 
@@ -1268,15 +1264,13 @@
           currencyFormat = createCurrencyFormat(getCurrency(state.currency));
         }
 
-        // Defaults and limits are in GB: storage is divided by the unit size, prices are multiplied.
+        // Default prices and the price limit are per GB and converted to the selected unit.
         const unitGb = UNIT_GB[state.unit];
-        const maxIncluded = includedStorageLimit / unitGb;
-        const maxTotal = totalStorageLimit / unitGb;
         const maxPrice = priceLimit * unitGb;
 
-        const included = sanitizeNumber(state.includedStorage, DEFAULTS.includedStorage / unitGb, 0, maxIncluded);
-        const total = sanitizeNumber(state.totalStorage, DEFAULTS.totalStorage / unitGb, 0, maxTotal);
-        const archive = sanitizeNumber(state.archiveStorage, DEFAULTS.archiveStorage / unitGb, 0, Math.max(0, total));
+        const included = sanitizeNumber(state.includedStorage, DEFAULTS.includedStorage, 0, includedStorageLimit);
+        const total = sanitizeNumber(state.totalStorage, DEFAULTS.totalStorage, 0, totalStorageLimit);
+        const archive = sanitizeNumber(state.archiveStorage, DEFAULTS.archiveStorage, 0, Math.max(0, total));
         const paygPrice = sanitizeNumber(state.paygPrice, DEFAULTS.paygPrice * unitGb, 0, maxPrice);
         const archivePrice = sanitizeNumber(state.archivePrice, DEFAULTS.archivePrice * unitGb, 0, maxPrice);
 
@@ -1322,12 +1316,10 @@
           message = `Archive storage was negative and has been reset to ${formatStorage(0)}.`;
         }
 
-        // A range input clamps a new value to its current max, so the limits of the selected unit
-        // have to be in place before syncInputs() writes the values (e.g. 15 TB -> 15,360 GB).
-        [["includedStorage", maxIncluded], ["totalStorage", maxTotal], ["archiveStorage", state.totalStorage]].forEach(([key, max]) => {
-          rangeMap[key].max = String(max);
-          inputMap[key].max = String(max);
-        });
+        if (rangeMap.archiveStorage && inputMap.archiveStorage) {
+          rangeMap.archiveStorage.max = String(state.totalStorage);
+          inputMap.archiveStorage.max = String(state.totalStorage);
+        }
         inputMap.paygPrice.max = String(maxPrice);
         inputMap.archivePrice.max = String(maxPrice);
 
@@ -1356,7 +1348,7 @@
         const billableArchiveStorage = Math.min(state.archiveStorage, additionalStorage);
 
         // Storage and prices are in the same unit (GB × price per GB, or TB × price per TB), so no
-        // conversion is needed; both units give the same costs because switching converts both.
+        // conversion is needed. With TB this equals the former TB × 1,024 × price per GB.
         const paygCost = paygStorage * state.paygPrice;
         const archiveCost = billableArchiveStorage * state.archivePrice;
         const totalCost = paygCost + archiveCost;
@@ -1585,12 +1577,10 @@
       function bindUnitToggle() {
         unitToggle.addEventListener("change", () => {
           const nextUnit = unitToggle.checked ? "TB" : "GB";
-          // Storage values and prices are converted so the costs stay the same. 1,024 is a power of
-          // two, so switching back and forth is exact in floating point and never drifts.
+          // The storage values keep their numbers and are now read as GB or TB, so the costs change.
+          // The prices are converted (0.20 per GB = 204.80 per TB) so they stay the same real price.
+          // 1,024 is a power of two, so switching back and forth is exact and never drifts.
           const factor = UNIT_GB[nextUnit] / UNIT_GB[state.unit];
-          state.includedStorage /= factor;
-          state.totalStorage /= factor;
-          state.archiveStorage /= factor;
           state.paygPrice *= factor;
           state.archivePrice *= factor;
           state.unit = nextUnit;

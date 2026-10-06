@@ -23,16 +23,9 @@ The KPI cards and the Storage Allocation card show monthly costs. The Yearly Cos
 
 ### GB / TB switch
 
-The switch in the top right corner of the Storage card selects the unit of the whole dashboard: GB (default) or TB. Storage values are entered and shown in that unit, and prices are per GB or per TB accordingly; every label, the legend, both formulas, and the price inputs in Settings follow it. Switching converts the current storage values and prices with `1 TB = 1,024 GB`, so the costs stay the same.
+The switch in the top right corner of the Storage card selects the unit of the whole dashboard: GB (default) or TB. It decides whether the storage values are GB or TB, and the prices are per GB or per TB accordingly; every label, the legend, both formulas, and the price inputs in Settings follow it.
 
-| Input            | Range in TB    | Range in GB          |
-| ---------------- | -------------- | -------------------- |
-| Included Storage | 0 – 1,024      | 0 – 1,048,576        |
-| Total Storage    | 0 – 2,048      | 0 – 2,097,152        |
-| Archive Storage  | 0 – Total      | 0 – Total            |
-| Prices           | 0 – 1,024,000  | 0 – 1,000 (per GB)   |
-
-The default storage values are 1 TB (1,024 GB) Included and Total and no Archive Storage.
+The storage inputs keep their ranges and values in both units: Included Storage 0 – 1,024, Total Storage 0 – 2,048, Archive Storage 0 – Total (defaults: 1, 1, and 0). Switching only changes what the numbers mean, e.g. 15 GB or 15 TB, and therefore the costs. The prices are converted with `1 TB = 1,024 GB` (0.20 per GB = 204.80 per TB), so they remain the same real price; with TB the costs equal `TB × 1,024 × price per GB`.
 
 All calculations are performed client-side and update as values change.
 

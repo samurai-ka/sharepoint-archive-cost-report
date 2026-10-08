@@ -4,16 +4,16 @@ A self-contained HTML dashboard for comparing included SharePoint storage, activ
 
 ## Calculation Model
 
-Storage values and prices always use the same unit, selected with the **GB / TB** switch (see below), and the dashboard applies these formulas:
+Storage values use the unit selected with the **GB / TB** switch (see below), while PAYG Price and Archive Price are always per GB. The dashboard applies these formulas, converting storage to GB before multiplying by the per-GB prices:
 
 ```text
 Additional Storage = Total Storage - Included Storage
 PAYG Storage = max(0, Additional Storage - Archive Storage)
 Billable Archive Storage = min(Archive Storage, Additional Storage)
-PAYG Cost = PAYG Storage × PAYG Price
-Archive Cost = Billable Archive Storage × Archive Price
+PAYG Cost = PAYG Storage (in GB) × PAYG Price
+Archive Cost = Billable Archive Storage (in GB) × Archive Price
 Total Cost = PAYG Cost + Archive Cost
-Cost Without Archive = Additional Storage × PAYG Price
+Cost Without Archive = Additional Storage (in GB) × PAYG Price
 Savings = Cost Without Archive - Total Cost
 Savings Percentage = Savings ÷ Cost Without Archive × 100
 Yearly Cost = Monthly Cost × 12
@@ -23,9 +23,9 @@ The KPI cards and the Storage Allocation card show monthly costs. The Yearly Cos
 
 ### GB / TB switch
 
-The switch in the top right corner of the Storage card selects the unit of the whole dashboard: GB (default) or TB. It decides whether the storage values are GB or TB, and the prices are per GB or per TB accordingly; every label, the legend, both formulas, and the price inputs in Settings follow it.
+The switch in the top right corner of the Storage card selects the unit of the storage values: GB (default) or TB. It decides whether the storage values are GB or TB; every storage label, the legend, and the allocation formula follow it. PAYG Price and Archive Price are not affected by this switch — they are always entered and stored per GB.
 
-The storage inputs keep their ranges and values in both units: Included Storage 0 – 1,024, Total Storage 0 – 2,048, Archive Storage 0 – Total (defaults: 1, 1, and 0). Switching only changes what the numbers mean, e.g. 15 GB or 15 TB, and therefore the costs. The prices are converted with `1 TB = 1,024 GB` (0.20 per GB = 204.80 per TB), so they remain the same real price; with TB the costs equal `TB × 1,024 × price per GB`.
+The storage inputs keep their ranges and values in both units: Included Storage 0 – 1,024, Total Storage 0 – 2,048, Archive Storage 0 – Total (defaults: 1, 1, and 0). Switching only changes what the numbers mean, e.g. 15 GB or 15 TB, and therefore the costs: with TB selected, the cost formula converts storage to GB with `1 TB = 1,024 GB` before multiplying by the per-GB price.
 
 All calculations are performed client-side and update as values change.
 
@@ -34,7 +34,7 @@ All calculations are performed client-side and update as values change.
 The **Settings** link in the header opens a panel on the right edge with:
 
 - **Currency**: all currencies offered by the Azure Pricing Calculator (default: Euro). Every amount in the dashboard uses the selected currency. Prices are not converted when the currency changes; enter them in the selected currency.
-- **PAYG Price** and **Archive Price** per GB or per TB, depending on the GB / TB switch (defaults: 0.20 and 0.05 per GB, i.e. 204.80 and 51.20 per TB).
+- **PAYG Price** and **Archive Price**, always per GB regardless of the GB / TB switch (defaults: 0.20 and 0.05 per GB).
 
 The settings, including the GB / TB switch, are stored in the browser's `localStorage` and restored on the next visit. Invalid stored values fall back to the defaults.
 
